@@ -1,0 +1,54 @@
+svg {width: 100%}
+
+/* engine */
+svg .st0 {
+  fill: hsl(7, 50%, 38%);
+  filter: url(#bolt-inner-shadow);
+}
+svg .st0 {
+  stroke black;
+  stroke-width: 3;
+}
+svg .st4{
+    stroke: whitesmoke;
+  fill: black;
+  animation: pulse 3s infinite;
+}
+
+svg .st4:hover {
+  width:100px;
+  stroke: red;
+  fill: silver;
+  stroke-width: 3;
+}
+svg .st1:hover {
+  stroke: silver;
+  fill: black;
+}
+
+svg .st6 {
+/*      animation: pulse 3s infinite; */
+}
+svg .st2:hover {
+  fill: red;
+  stroke-width: 1px;
+  stroke:black;
+}
+
+/* fonts */
+svg .st6:hover {
+
+  fill: red;
+  font-size:12px;
+font-family: "Comic Sans MS", cursive, sans-serif;
+font-weight: 100;
+}
+
+@keyframes pulse {
+  1%   { transform: scale(0.7); }
+  25%  { transform: scale(1.1); }
+  45%  { transform: scale(0.9); }
+  63%  { transform: scale(1.05); }
+  79%  { transform: scale(0.95); }
+  100% { transform: scale(1.0); }
+}
