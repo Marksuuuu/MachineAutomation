@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, json
+from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
 import psycopg2.extras
 import psutil
 import subprocess
 import time
-
 
 app = Flask(__name__)
 
@@ -34,11 +34,11 @@ cur = conn.cursor()
 
 # Add the programs to the database
 for program in programs:
-    cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', (program['name'], program['path'], 'stopped'))
-
-
+    cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+                (program['name'], program['path'], 'stopped'))
 
 conn.commit()
+
 
 class Program:
     def __init__(self, id, name, path):
@@ -60,6 +60,7 @@ class Program:
             subprocess.check_call(['python', self.path])
         except subprocess.CalledProcessError as e:
             print(f"Error running {self.name}: {e}")
+
 
 class ProgramManager:
     def __init__(self):
@@ -100,19 +101,22 @@ class ProgramManager:
 
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute('SELECT count(name) as total_machines FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name)')
+        cursor.execute(
+            'SELECT count(name) as total_machines FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name)')
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_running(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'running'")
+        cursor.execute(
+            "SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'running'")
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_stopped(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'stopped'")
+        cursor.execute(
+            "SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'stopped'")
         total_count = cursor.fetchone()
         return total_count
 
@@ -127,70 +131,59 @@ class ProgramManager:
             self.load_programs()
             self.check_running_programs()
 
+
 # Instantiate the program manager
 program_manager = ProgramManager()
 
 # Run the program manager in a separate thread
 import threading
+
 t = threading.Thread(target=program_manager.run)
 t.start()
 
-# Flask routes
-@app.route('/')
-def log_in():
+# Load users from JSON file
+with open('api.json') as f:
+    users = json.load(f)
+
+
+# Define the route for the login page
+@app.route('/', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
-        _username = request.form('username')
-        _password = request.form('password')
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        result = cursor.execute('SELECT * FROM user_details WHERE username = %s', [username])
-
-        if result > 0:
-            data = cursor.fetchone()
-            password = data['password']
+        # Check if the entered username and password are valid
+        username = request.json['username']
+        password = request.json['password']
+        if username in users and users[username] == password:
+            # Redirect to the index page with a success message
+            return redirect(url_for('index', success=True))
         else:
-            error = 'NOT FOUND'
-            return render_template('auth-login.html', error=error)
+            # Return an error message as JSON
+            return jsonify({'error': 'Invalid username or password'})
+    else:
+        # Display the login form
+        return render_template('auth-login.html')
 
 
-@app.route('/index')
+# Define the route for the index page
+@app.route('/index', methods=['GET'])
 def index():
+    # Get the success parameter from the URL
     program_manager = ProgramManager()
     count_machines = program_manager.count_total_machine()
     count_machines_running = program_manager.count_total_machine_running()
     count_machines_stopped = program_manager.count_total_machine_stopped()
-    # return render_template('index.html', count_machines=count_machines, count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
-    return render_template('auth-login.html')
+    success = request.args.get('success')
+    username = session.get('username')
+    return render_template('index.html', username=username, success=success, count_machines=count_machines,
+                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
+
+
 @app.route('/data_table')
 def view_tables():
     program_manager = ProgramManager()
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
 
-@app.route("/ajaxfile",methods=["POST","GET"])
-def ajaxfile():
-    try:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        if request.method == 'POST':
-            ## Fetch records
-            cursor.execute('SELECT * FROM programs')
-            programs = cursor.fetchall()
-            print(programs)
-            data = []
-            for row in programs:
-                data.append({
-                    'name': row['name'],
-                    'path': row['path'],
-                    'status': row['status'],
-                })
-  
-            response = {
-                'dt_data'
-            }
-            return jsonify(response)    
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close() 
 
 @app.route('/add', methods=['POST'])
 def add_program():
@@ -199,10 +192,12 @@ def add_program():
     program_manager.add_program(name, path)
     return redirect(url_for('index'))
 
+
 @app.route('/remove/<int:id>', methods=['POST'])
 def remove_program(id):
     program_manager.remove_program(id)
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run(host="localhost", port=8082, debug=True)
