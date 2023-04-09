@@ -62,7 +62,20 @@ $(document).ready(function() {
 					      }
                     },
                     { data: 'date_start'},
-                    { data: 'date_stop'}
+                    { data: 'date_stop'},
+                    {data : null,
+                        "render": function(data, type, row) {
+                            return ' <button class="btn btn-danger rounded-pill icon dripicons dripicons-trash" onclick="deleteRow(' + row.id + ')"></button>';
+                        },
+                    },
+                    {data : null,
+                        "render": function(data, type, row) {
+                            return ' <button class="btn btn-primary rounded-pill icon dripicons dripicons-pencil" onclick="deleteRow(' + row.id + ')"></button>';
+                        }
+                    }
                 ]
             });
 });
+
+
+                     

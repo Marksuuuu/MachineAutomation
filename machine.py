@@ -18,9 +18,7 @@ db_user = 'flask_user'
 db_password = '-clear1125'
 
 # Programs configuration
-programs = [
-   
-]
+programs = []
 
 # Connect to the database
 conn = psycopg2.connect(
@@ -242,11 +240,6 @@ def logout():
     session.pop('username', None)
     # redirect to the login page
     return redirect(url_for('login'))
-
-@app.route('/remove/<int:id>', methods=['POST'])
-def remove_program(id):
-    program_manager.remove_program(id)
-    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(host="localhost", port=8082, debug=True)
