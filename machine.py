@@ -11,15 +11,13 @@ app = Flask(__name__)
 # Database configuration
 db_host = 'localhost'
 db_port = 5432
-db_name = 'machine_automation_database'
+db_name = 'machine_automation_controller'
 db_user = 'flask_user'
 db_password = '-clear1125'
 
 # Programs configuration
 programs = [
-    {'name': 'controller1', 'path': 'dummy.py'},
-    {'name': 'test2', 'path': 'dummy2.py'},
-    # {'name': 'program3', 'path': '/path/to/program3.py'},
+   
 ]
 
 # Connect to the database
@@ -32,12 +30,15 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-# Add the programs to the database
-for program in programs:
-    cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
-                (program['name'], program['path'], 'stopped'))
-
+cur.execute('CREATE TABLE IF NOT EXISTS program_tbl (id SERIAL PRIMARY KEY, name TEXT UNIQUE, path TEXT, status TEXT)')
 conn.commit()
+
+# Add the programs to the database
+# for program in programs:
+#     cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+#                 (program['name'], program['path'], 'stopped'))
+
+# conn.commit()
 
 
 class Program:
@@ -68,16 +69,16 @@ class ProgramManager:
 
     def load_programs(self):
         self.programs.clear()
-        cur.execute('SELECT * FROM programs')
+        cur.execute('SELECT * FROM program_tbl')
         for row in cur.fetchall():
             program = Program(row[0], row[1], row[2])
             self.programs.append(program)
 
     def add_program(self, name, path):
-        cur.execute('SELECT COUNT(*) FROM programs WHERE name = %s AND path = %s', (name, path))
+        cur.execute('SELECT COUNT(*) FROM program_tbl WHERE name = %s AND path = %s', (name, path))
         count = cur.fetchone()[0]
         if count == 0:
-            cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
+            cur.execute('INSERT INTO program_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
             conn.commit()
             self.load_programs()
             return True
@@ -85,7 +86,7 @@ class ProgramManager:
             return False
 
     def remove_program(self, id):
-        cur.execute('DELETE FROM programs WHERE id = %s', (id,))
+        cur.execute('DELETE FROM program_tbl WHERE id = %s', (id,))
         conn.commit()
         self.load_programs()
 
@@ -96,33 +97,33 @@ class ProgramManager:
             else:
                 status = 'stopped'
                 # program.run()
-            cur.execute('UPDATE programs SET status = %s WHERE id = %s', (status, program.id))
+            cur.execute('UPDATE program_tbl SET status = %s WHERE id = %s', (status, program.id))
             conn.commit()
 
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            'SELECT count(name) as total_machines FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name)')
+            'SELECT count(name) as total_machines FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name)')
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_running(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            "SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'running'")
+            "SELECT count(status) FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name) and status = 'running'")
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_stopped(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            "SELECT count(status) FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name) and status = 'stopped'")
+            "SELECT count(status) FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name) and status = 'stopped'")
         total_count = cursor.fetchone()
         return total_count
 
     def view_table_func(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT * FROM programs WHERE id IN (SELECT MAX(id) FROM programs GROUP BY name)")
+        cursor.execute("SELECT * FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name)")
         total_count = cursor.fetchall()
         return total_count
 
@@ -131,8 +132,6 @@ class ProgramManager:
             self.load_programs()
             self.check_running_programs()
 
-
-# Instantiate the program manager
 program_manager = ProgramManager()
 
 # Run the program manager in a separate thread
@@ -144,7 +143,6 @@ t.start()
 # Load users from JSON file
 with open('api.json') as f:
     users = json.load(f)
-
 
 # Define the route for the login page
 @app.route('/', methods=['GET', 'POST'])
@@ -163,7 +161,6 @@ def login():
         # Display the login form
         return render_template('auth-login.html')
 
-
 # Define the route for the index page
 @app.route('/index', methods=['GET'])
 def index():
@@ -177,13 +174,26 @@ def index():
     return render_template('index.html', username=username, success=success, count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
 
+@app.route('/process', methods=['POST'])
+def process():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+ 
+    msg = ''
+    machine_name = request.form['machine_name']
+    program_path = request.form['program_path']
+    status = 'stopped'
+    cursor.execute("INSERT INTO program_tbl (name, path, status) VALUES (%s,%s,%s)", (machine_name, program_path, status))
+    conn.commit()
+    print('success')
+    msg = 'You have successfully registered!'
+    return jsonify({'name' : msg})
+
 
 @app.route('/data_table')
 def view_tables():
     program_manager = ProgramManager()
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
-
 
 @app.route('/add', methods=['POST'])
 def add_program():
@@ -192,13 +202,10 @@ def add_program():
     program_manager.add_program(name, path)
     return redirect(url_for('index'))
 
-
 @app.route('/remove/<int:id>', methods=['POST'])
 def remove_program(id):
     program_manager.remove_program(id)
     return redirect(url_for('index'))
 
-
 if __name__ == '__main__':
     app.run(host="localhost", port=8082, debug=True)
-    # app.static_folder = 'static'

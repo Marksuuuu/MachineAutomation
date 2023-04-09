@@ -16,6 +16,8 @@
     <link rel="stylesheet"
         href="{{url_for('static', filename='assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/datatables.css') }}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
+
 
 </head>
 
@@ -119,8 +121,49 @@
             <section class="section">
                 <div class="card">
                     <div class="card-header">
-                        Jquery Datatable
+                        <div class="form-group">
+                        <!-- Button trigger for login form modal -->
+                        <button type="button" style="float: right;" class="btn btn-primary text-right" data-bs-toggle="modal" data-bs-target="#inlineForm">
+                          <span>ADD MACHINE</span>
+                        </button>
+
+                        <!--login form Modal -->
+                        <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33" style="display: none;" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-top modal-dialog-scrollable" role="document">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel33">
+                                  Add Machine
+                                </h4>
+                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                              </div>
+                              <form action="#" id='add-machine'>
+                                <div class="modal-body">
+                                  <label for="machine_name">Machine Name: </label>
+                                  <div class="form-group">
+                                    <input id="machine_name" name='machine_name' type="text" placeholder="Machine name" class="form-control">
+                                  </div>
+                                  <label for="program_path">Program Path: </label>
+                                  <div class="form-group">
+                                    <input id="program_path" name='program_path' placeholder="Program Path" class="form-control">
+                                  </div>
+                                </div>
+                                <div class="modal-footer">
+                                  </button>
+                                  <button type="submit" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                                    <i class="bx bx-check d-block d-sm-none"></i>
+                                    <span class="d-none d-sm-block">Add</span>
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
                     <div class="card-body">
                         <table class="table" id="status_details">
                             <thead>
@@ -153,9 +196,11 @@
     <script src="{{url_for('static', filename='assets/js/app.js') }}"></script>
 
     <script src="{{url_for('static', filename='assets/extensions/jquery/jquery.min.js') }}"></script>
-    <script src="{{url_for('static', filename='https://cdn.datatables.net/v/bs5/dt-1.12.1/datatables.min.js') }}">
-    </script>
+    <script src="https://cdn.datatables.net/v/bs5/dt-1.12.1/datatables.min.js"></script>
     <script src="{{url_for('static', filename='assets/js/pages/datatables.js') }}"></script>
+    <script src="{{url_for('static', filename='assets/js/table.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 </body>
 
