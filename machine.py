@@ -184,6 +184,7 @@ def ajaxfile():
     rowperpage = int(request.form['length'])
     searchValue = request.form["search[value]"]
     likeString = "{}%".format(searchValue)
+    
     cursor.execute("SELECT count(*) as allcount from program_tbl WHERE name LIKE %s", (likeString,))
     rsallcount = cursor.fetchone()
     totalRecordwithFilter = rsallcount['allcount']
