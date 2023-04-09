@@ -60,7 +60,9 @@ $(document).ready(function() {
 					        }
 					        return '<span class="' + badgeClass + '">' + data + '</span>';
 					      }
-                    }
+                    },
+                    { data: 'date_start'},
+                    { data: 'date_stop'}
                 ]
             });
 });

@@ -5,8 +5,10 @@ import psycopg2.extras
 import psutil
 import subprocess
 import time
+import datetime
 
 app = Flask(__name__)
+app.secret_key = 'mark'
 
 # Database configuration
 db_host = 'localhost'
@@ -83,11 +85,15 @@ class ProgramManager:
         for program in self.programs:
             if program.is_running():
                 status = 'running'
+                date_start = datetime.datetime.now()
+                cur.execute('UPDATE program_tbl SET status = %s, date_start = %s WHERE id = %s', (status, date_start, program.id))
+                conn.commit()
+
             else:
                 status = 'stopped'
-                # program.run()
-            cur.execute('UPDATE program_tbl SET status = %s WHERE id = %s', (status, program.id))
-            conn.commit()
+                date_stop = datetime.datetime.now()
+                cur.execute('UPDATE program_tbl SET status = %s, date_stop = %s WHERE id = %s', (status, date_stop, program.id))
+                conn.commit()
 
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -142,6 +148,8 @@ def login():
         password = request.json['password']
         if username in users and users[username] == password:
             # Redirect to the index page with a success message
+            session['logged_in'] = True
+            session['username'] = username
             return redirect(url_for('index', success=True))
         else:
             # Return an error message as JSON
@@ -184,7 +192,7 @@ def ajaxfile():
     rowperpage = int(request.form['length'])
     searchValue = request.form["search[value]"]
     likeString = "{}%".format(searchValue)
-    
+
     cursor.execute("SELECT count(*) as allcount from program_tbl WHERE name LIKE %s", (likeString,))
     rsallcount = cursor.fetchone()
     totalRecordwithFilter = rsallcount['allcount']
@@ -209,6 +217,8 @@ def ajaxfile():
             'name': row['name'],
             'path': row['path'],
             'status': row['status'],
+            'date_start': row['date_start'],
+            'date_stop': row['date_stop']
         })
 
     response = {
@@ -226,12 +236,12 @@ def view_tables():
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
 
-@app.route('/add', methods=['POST'])
-def add_program():
-    name = request.form['name']
-    path = request.form['path']
-    program_manager.add_program(name, path)
-    return redirect(url_for('index'))
+@app.route('/logout')
+def logout():
+    # remove the username from the session if it's there
+    session.pop('username', None)
+    # redirect to the login page
+    return redirect(url_for('login'))
 
 @app.route('/remove/<int:id>', methods=['POST'])
 def remove_program(id):
