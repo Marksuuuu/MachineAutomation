@@ -165,7 +165,7 @@
                     </div>
 
                     <div class="card-body">
-                        <table class="table" id="status_details">
+                        <table class="table" id="data_tbl">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -173,15 +173,6 @@
                                     <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {% for user in view_all_machine_and_status %}
-                                <tr>
-                                    <td>{{ user.name }}</td>
-                                    <td>{{ user.path }}</td>
-                                    <td>{{ user.status }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
                         </table>
                     </div>
                 </div>

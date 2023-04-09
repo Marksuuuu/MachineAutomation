@@ -32,3 +32,35 @@ $(document).ready(function() {
                event.preventDefault();
            });
        });
+
+$(document).ready(function() {
+    var empDataTable = $('#data_tbl').DataTable({
+                'processing': true,
+                'serverSide': true,
+                'serverMethod': 'post',
+                'ajax': {
+                    'url':'/ajaxfile'
+                },
+                'lengthMenu': [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                searching: true,
+                sort: false,
+                "serverSide": true,
+                'columns': [
+                    { data: 'name' },
+                    { data: 'path' },
+                    { data: 'status',
+	                    render: function(data, type, row, meta) {
+					        var badgeClass = '';
+					        if (data == 'running') {
+					          badgeClass = 'badge bg-success"';
+					        } else if (data == 'stopped') {
+					          badgeClass = 'badge bg-danger';
+					        } else {
+					          badgeClass = 'badge bg-secondary';
+					        }
+					        return '<span class="' + badgeClass + '">' + data + '</span>';
+					      }
+                    }
+                ]
+            });
+});

@@ -30,17 +30,6 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-cur.execute('CREATE TABLE IF NOT EXISTS program_tbl (id SERIAL PRIMARY KEY, name TEXT UNIQUE, path TEXT, status TEXT)')
-conn.commit()
-
-# Add the programs to the database
-# for program in programs:
-#     cur.execute('INSERT INTO programs (name, path, status) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
-#                 (program['name'], program['path'], 'stopped'))
-
-# conn.commit()
-
-
 class Program:
     def __init__(self, id, name, path):
         self.id = id
@@ -184,10 +173,51 @@ def process():
     status = 'stopped'
     cursor.execute("INSERT INTO program_tbl (name, path, status) VALUES (%s,%s,%s)", (machine_name, program_path, status))
     conn.commit()
-    print('success')
-    msg = 'You have successfully registered!'
+    msg = 'success'
     return jsonify({'name' : msg})
 
+@app.route("/ajaxfile", methods=["POST"])
+def ajaxfile():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    draw = request.form['draw']
+    row = int(request.form['start'])
+    rowperpage = int(request.form['length'])
+    searchValue = request.form["search[value]"]
+    likeString = "{}%".format(searchValue)
+    cursor.execute("SELECT count(*) as allcount from program_tbl WHERE name LIKE %s", (likeString,))
+    rsallcount = cursor.fetchone()
+    totalRecordwithFilter = rsallcount['allcount']
+    print(totalRecordwithFilter)
+
+    # Total number of records without filtering
+    cursor.execute("select count(*) as allcount from program_tbl")
+    rsallcount = cursor.fetchone()
+    totalRecords = rsallcount['allcount']
+    print(totalRecords)
+
+    if searchValue == '':
+        cursor.execute('SELECT * FROM program_tbl LIMIT {limit} OFFSET {offset}'.format(limit=rowperpage, offset=row))
+        programlist = cursor.fetchall()
+    else:
+        cursor.execute("SELECT * FROM program_tbl WHERE name LIKE %s LIMIT %s OFFSET %s;", (likeString, rowperpage, row,))
+        programlist = cursor.fetchall()
+
+    data = []
+    for row in programlist:
+        data.append({
+            'name': row['name'],
+            'path': row['path'],
+            'status': row['status'],
+        })
+
+    response = {
+        'draw': draw,
+        'recordsTotal': totalRecords,
+        'recordsFiltered': totalRecordwithFilter,
+        'data': data,
+    }
+
+    return jsonify(response)
 
 @app.route('/data_table')
 def view_tables():
