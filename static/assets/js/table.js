@@ -1,37 +1,48 @@
 $(document).ready(function() {
-           $('form').on('submit', function(event) {
-               $('#loader').show();
-               $.ajax({
-                   data : {
-                       machine_name : $('#machine_name').val(),
-                       program_path : $('#program_path').val()
-                   },
-                   type : 'POST',
-                   url : '/process'
-               })
-               .done(function(data) {
-                   if (data.error) {
-                    Swal.fire({
-                      title: 'Error!',
-                      text: 'Do you want to continue',
-                      icon: 'error',
-                      confirmButtonText: 'Cool',
-                      timer: 1500
-                    })
-                   }
-                   else {
-                     Swal.fire({
-                      icon: 'success',
-                      title: 'Your work has been saved',
-                      showConfirmButton: false,
-                      timer: 2000
-                    })
-                   }
-         
-               });
-               event.preventDefault();
-           });
-       });
+            $('form').on('submit', function(event) {
+            var machine_name = $('#machine_name').val()
+            var program_path = $('#program_path').val()
+
+            if (program_path == '' && program_path == '') {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Please Enter Something',
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                })
+                event.preventDefault();
+            } else {
+                $.ajax({
+                    data : {
+                        machine_name : $('#machine_name').val(),
+                        program_path : $('#program_path').val()
+                    },
+                    type : 'POST',
+                    url : '/process'
+                })
+                .done(function(data) {
+                    if (data.error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Do you want to continue',
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                            timer: 1500
+                        })
+                    }
+                    else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Saved!',
+                            showConfirmButton: false,
+                            timer: 2000
+                        })
+                    }
+                });
+                event.preventDefault();
+            }
+        });
+       });  
 
 $(document).ready(function() {
     var empDataTable = $('#data_tbl').DataTable({
@@ -39,11 +50,11 @@ $(document).ready(function() {
                 'serverSide': true,
                 'serverMethod': 'post',
                 'ajax': {
-                    'url':'/ajaxfile'
+                    'url':'/datatable'
                 },
                 'lengthMenu': [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                 searching: true,
-                sort: false,
+                sort: true,
                 "serverSide": true,
                 'columns': [
                     { data: 'name' },
@@ -63,19 +74,95 @@ $(document).ready(function() {
                     },
                     { data: 'date_start'},
                     { data: 'date_stop'},
-                    {data : null,
-                        "render": function(data, type, row) {
-                            return ' <button class="btn btn-danger rounded-pill icon dripicons dripicons-trash" onclick="deleteRow(' + row.id + ')"></button>';
-                        },
-                    },
-                    {data : null,
-                        "render": function(data, type, row) {
-                            return ' <button class="btn btn-primary rounded-pill icon dripicons dripicons-pencil" onclick="deleteRow(' + row.id + ')"></button>';
-                        }
+                    { data: null,
+                      "render": function (data, type, row) {
+                        var editBtn = '<button id="delete-button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit" onclick="editRow()"></button>';
+                        var deleteBtn = '<button class="btn btn-danger rounded-pill icon dripicons dripicons-trash" onclick="deleteRow()"></button>';
+                          return editBtn + " " + deleteBtn;
+                      }
                     }
                 ]
             });
+
 });
+
+function editRow(id) {
+      Swal.fire({
+      title: 'Are you sure?',
+      text: "You want to edit?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire(
+          'Deleted!',
+          'Your file has been deleted.',
+          'success'
+        )
+      }
+    })
+
+}
+
+function deleteRow(id) {
+    Swal.fire({
+          title: 'Are you sure?',
+          text: "Are you sure you want to delete this program?",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+            url: '/delete_program',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                'id': id
+            }),
+            success: function(data) {
+                if (data.success) {
+                    Swal.fire(
+                      'Deleted!',
+                      'Your file has been deleted.',
+                      'success'
+                    )
+                    empDataTable.ajax.reload();
+                } else {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'Something went wrong!',
+                    })
+                }
+            },
+            error: function(error) {
+                Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: 'Error, Plase check again.',
+                    })
+                console.log(error);
+            }
+        });
+          }
+        })
+}
+
+
+
+
+
+
+
+
+
+
 
 
                      

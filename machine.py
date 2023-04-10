@@ -182,8 +182,8 @@ def process():
     msg = 'success'
     return jsonify({'name' : msg})
 
-@app.route("/ajaxfile", methods=["POST"])
-def ajaxfile():
+@app.route("/datatable", methods=["POST"])
+def datatable():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     draw = request.form['draw']
     row = int(request.form['start'])
@@ -211,12 +211,13 @@ def ajaxfile():
 
     data = []
     for row in programlist:
+       
         data.append({
             'name': row['name'],
             'path': row['path'],
             'status': row['status'],
             'date_start': row['date_start'],
-            'date_stop': row['date_stop']
+            'date_stop': row['date_stop'],
         })
 
     response = {
@@ -233,6 +234,12 @@ def view_tables():
     program_manager = ProgramManager()
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
+
+@app.route('/program/<int:id>', methods=['DELETE'])
+def delete_program(id):
+    program_manager = ProgramManager()
+    program_manager.delete_program(id)
+    return jsonify({'success': True})
 
 @app.route('/logout')
 def logout():
