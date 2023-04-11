@@ -6,6 +6,9 @@ import psutil
 import subprocess
 import time
 import datetime
+import json
+import hashlib
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'mark'
@@ -13,7 +16,7 @@ app.secret_key = 'mark'
 # Database configuration
 db_host = 'localhost'
 db_port = 5432
-db_name = 'machine_automation_controller'
+db_name = 'machine_automation_tbl'
 db_user = 'flask_user'
 db_password = '-clear1125'
 
@@ -58,16 +61,16 @@ class ProgramManager:
 
     def load_programs(self):
         self.programs.clear()
-        cur.execute('SELECT * FROM program_tbl')
+        cur.execute('SELECT * FROM machine_tbl')
         for row in cur.fetchall():
             program = Program(row[0], row[1], row[2])
             self.programs.append(program)
 
     def add_program(self, name, path):
-        cur.execute('SELECT COUNT(*) FROM program_tbl WHERE name = %s AND path = %s', (name, path))
+        cur.execute('SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
         count = cur.fetchone()[0]
         if count == 0:
-            cur.execute('INSERT INTO program_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
+            cur.execute('INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
             conn.commit()
             self.load_programs()
             return True
@@ -75,7 +78,7 @@ class ProgramManager:
             return False
 
     def remove_program(self, id):
-        cur.execute('DELETE FROM program_tbl WHERE id = %s', (id,))
+        cur.execute('DELETE FROM machine_tbl WHERE id = %s', (id,))
         conn.commit()
         self.load_programs()
 
@@ -84,39 +87,39 @@ class ProgramManager:
             if program.is_running():
                 status = 'running'
                 date_start = datetime.datetime.now()
-                cur.execute('UPDATE program_tbl SET status = %s, date_start = %s WHERE id = %s', (status, date_start, program.id))
+                cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s', (status, date_start, program.id))
                 conn.commit()
 
             else:
                 status = 'stopped'
                 date_stop = datetime.datetime.now()
-                cur.execute('UPDATE program_tbl SET status = %s, date_stop = %s WHERE id = %s', (status, date_stop, program.id))
+                cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s', (status, date_stop, program.id))
                 conn.commit()
 
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            'SELECT count(name) as total_machines FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name)')
+            'SELECT count(name) as total_machines FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name)')
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_running(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            "SELECT count(status) FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name) and status = 'running'")
+            "SELECT count(status) FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name) and status = 'running'")
         total_count = cursor.fetchone()
         return total_count
 
     def count_total_machine_stopped(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            "SELECT count(status) FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name) and status = 'stopped'")
+            "SELECT count(status) FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name) and status = 'stopped'")
         total_count = cursor.fetchone()
         return total_count
 
     def view_table_func(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT * FROM program_tbl WHERE id IN (SELECT MAX(id) FROM program_tbl GROUP BY name)")
+        cursor.execute("SELECT * FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name)")
         total_count = cursor.fetchall()
         return total_count
 
@@ -141,17 +144,41 @@ with open('api.json') as f:
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Check if the entered username and password are valid
-        username = request.json['username']
-        password = request.json['password']
-        if username in users and users[username] == password:
-            # Redirect to the index page with a success message
-            session['logged_in'] = True
-            session['username'] = username
-            return redirect(url_for('index', success=True))
+        form_username = request.form['username']
+        form_password = request.form['password']
+
+        url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
+        response = requests.get(url).json()
+        
+        if response['result'] == False:
+            return  """<script>
+                        alert('Error')
+                        </script>"""
         else:
-            # Return an error message as JSON
-            return jsonify({'error': 'Invalid username or password'})
+            user_data = response["result"]
+            session['firstname'] = user_data['firstname'],
+            session['lastname'] = user_data['lastname'],
+            session['username'] = user_data['username']
+            print(session['username'])
+            return redirect(url_for('index', success=True))
+              
+        
+        # if url:
+        #     return '<span>True<span/>'
+        # else:
+        #     return '<span>Error<span/>'
+        # data = json.loads(request_var.text)
+        # # Check if the entered username and password are valid
+        # username = request.json['username']
+        # password = request.json['password']
+        # if username in users and users[username] == password:
+        #     # Redirect to the index page with a success message
+        #     session['logged_in'] = True
+        #     session['username'] = username
+        #     return redirect(url_for('index', success=True))
+        # else:
+        #     # Return an error message as JSON
+        #     return jsonify({'error': 'Invalid username or password'})
     else:
         # Display the login form
         return render_template('auth-login.html')
@@ -177,7 +204,7 @@ def process():
     machine_name = request.form['machine_name']
     program_path = request.form['program_path']
     status = 'stopped'
-    cursor.execute("INSERT INTO program_tbl (name, path, status) VALUES (%s,%s,%s)", (machine_name, program_path, status))
+    cursor.execute("INSERT INTO machine_tbl (name, path, status) VALUES (%s,%s,%s)", (machine_name, program_path, status))
     conn.commit()
     msg = 'success'
     return jsonify({'name' : msg})
@@ -191,28 +218,29 @@ def datatable():
     searchValue = request.form["search[value]"]
     likeString = "{}%".format(searchValue)
 
-    cursor.execute("SELECT count(*) as allcount from program_tbl WHERE name LIKE %s", (likeString,))
+    cursor.execute("SELECT count(*) as allcount from machine_tbl WHERE name LIKE %s", (likeString,))
     rsallcount = cursor.fetchone()
     totalRecordwithFilter = rsallcount['allcount']
     print(totalRecordwithFilter)
 
     # Total number of records without filtering
-    cursor.execute("select count(*) as allcount from program_tbl")
+    cursor.execute("select count(*) as allcount from machine_tbl")
     rsallcount = cursor.fetchone()
     totalRecords = rsallcount['allcount']
     print(totalRecords)
 
     if searchValue == '':
-        cursor.execute('SELECT * FROM program_tbl LIMIT {limit} OFFSET {offset}'.format(limit=rowperpage, offset=row))
+        cursor.execute('SELECT * FROM machine_tbl LIMIT {limit} OFFSET {offset}'.format(limit=rowperpage, offset=row))
         programlist = cursor.fetchall()
     else:
-        cursor.execute("SELECT * FROM program_tbl WHERE name LIKE %s LIMIT %s OFFSET %s;", (likeString, rowperpage, row,))
+        cursor.execute("SELECT * FROM machine_tbl WHERE name LIKE %s LIMIT %s OFFSET %s;", (likeString, rowperpage, row,))
         programlist = cursor.fetchall()
 
     data = []
     for row in programlist:
        
         data.append({
+            'id': row['id'],
             'name': row['name'],
             'path': row['path'],
             'status': row['status'],
@@ -243,10 +271,9 @@ def delete_program(id):
 
 @app.route('/logout')
 def logout():
-    # remove the username from the session if it's there
-    session.pop('username', None)
-    # redirect to the login page
-    return redirect(url_for('login'))
+    # Clear the session and redirect to the login page
+    session.clear()
+    return redirect(url_for('login', success=True))
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8082, debug=True)
+    app.run(host="localhost", port=8083, debug=True)

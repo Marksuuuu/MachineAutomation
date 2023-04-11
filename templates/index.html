@@ -217,8 +217,8 @@
                                             alt="Face 1">
                                     </div>
                                     <div class="ms-3 name">
-                                        <h5 class="font-bold">Welcome.. {{ username }}</h5>
-                                        <h6 class="text-muted mb-0">@johnducky</h6>
+                                        <span class="font-bold">Welcome.. &nbsp;&nbsp;&nbsp;</span>
+                                        <span class="text-muted mb-0">{{ session['username']}}</span>
                                     </div>
 
                                 </div>
@@ -283,6 +283,7 @@
     <script src="https://cdn.lordicon.com/ritcuqlt.js"></script>
     <script src="{{url_for('static', filename='assets/extensions/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{url_for('static', filename='assets/js/pages/dashboard.js') }}"></script>
+    <script src="{{url_for('static', filename='assets/js/login.js') }}"></script>
 
 </body>
 

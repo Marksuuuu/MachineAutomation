@@ -14,8 +14,8 @@ $(document).ready(function() {
             } else {
                 $.ajax({
                     data : {
-                        machine_name : $('#machine_name').val(),
-                        program_path : $('#program_path').val()
+                        machine_name : machine_name,
+                        program_path : program_path
                     },
                     type : 'POST',
                     url : '/process'
@@ -27,7 +27,7 @@ $(document).ready(function() {
                             text: 'Do you want to continue',
                             icon: 'error',
                             confirmButtonText: 'Ok',
-                            timer: 1500
+                            timer: 2000
                         })
                     }
                     else {
@@ -45,18 +45,21 @@ $(document).ready(function() {
        });  
 
 $(document).ready(function() {
-    var empDataTable = $('#data_tbl').DataTable({
+    var machineTbl = $('#data_tbl').DataTable({
                 'processing': true,
                 'serverSide': true,
                 'serverMethod': 'post',
                 'ajax': {
-                    'url':'/datatable'
+                    'url':'/datatable',
+                    
                 },
+
                 'lengthMenu': [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                 searching: true,
                 sort: true,
                 "serverSide": true,
                 'columns': [
+                    { data: 'id' },
                     { data: 'name' },
                     { data: 'path' },
                     { data: 'status',
@@ -83,6 +86,10 @@ $(document).ready(function() {
                     }
                 ]
             });
+    setInterval( function () {
+        machineTbl.ajax.reload();
+        console.log('test')
+    }, 100000 );
 
 });
 
@@ -153,6 +160,7 @@ function deleteRow(id) {
           }
         })
 }
+
 
 
 
