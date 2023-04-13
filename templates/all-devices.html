@@ -65,7 +65,7 @@
                         <li class="sidebar-title">Menu</li>
 
                         <li class="sidebar-item active ">
-                            <a href="{{url_for('index') }}">
+                            <a href="{{url_for('index') }}" class='sidebar-link'>
                                 <i class="bi bi-grid-fill"></i>
                                 <span>Dashboard</span>
                             </a>
@@ -74,7 +74,7 @@
                         <li class="sidebar-title">Forms &amp; Tables</li>
 
                         <li class="sidebar-item ">
-                            <a href="{{url_for('view_tables') }}">
+                            <a href="{{url_for('view_tables') }}" class='sidebar-link'>
                                 <lord-icon src="https://cdn.lordicon.com/luglsinl.json" trigger="loop" delay="1500"
                                     style="width:50px;height:50px">
                                 </lord-icon>
@@ -85,11 +85,11 @@
                         <li class="sidebar-title">Operations Devices</li>
 
                         <li class="sidebar-item ">
-                            <a href="{{url_for('all_device') }}">
+                            <a href="{{url_for('view_tables') }}" class='sidebar-link'>
                                 <lord-icon src="https://cdn.lordicon.com/luglsinl.json" trigger="loop" delay="1500"
                                     style="width:50px;height:50px">
                                 </lord-icon>
-                                <span>Operation - Sample</span>
+                                <span>Devices</span>
                             </a>
                         </li>
 
@@ -223,49 +223,64 @@
                         <div class="card">
                             <div class="card-body py-4 px-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="dropdown" style="margin: auto;">
-                                        <a href="#" data-bs-toggle="dropdown" aria-expanded="false" class="">
-                                          <div class="user-menu d-flex">
-                                            <div class="user-name text-end me-3" style="margin-top: auto; margin-bottom: auto;">
-                                              <h5 class="mb-0 text-gray-600">{{ session['firstname']}} {{ session['lastname']}}</h5>
-                                              <p class="mb-0 text-sm text-gray-600">{{ session['employee_position']}}</p>
-                                            </div>
-                                            <div class="user-img d-flex align-items-right">
-                                              <div class="avatar avatar-xl">
-                                                <img src="{{ session['photo_url'] }}">
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </a>
-                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style="min-width: 11rem">
-                                          <li>
-                                            <h6 class="dropdown-header">Hello, {{ session['username']}}!</h6>
-                                          </li>
-                                          <li>
-                                            <a class="dropdown-item" href="#"><i class="icon-mid bi bi-person me-2"></i> My
-                                              Profile</a>
-                                          </li>
-                                          <li>
-                                            <a class="dropdown-item" href="#"><i class="icon-mid bi bi-gear me-2"></i> Settings</a>
-                                          </li>
-                                          <li>
-                                            <a class="dropdown-item" href="#"><i class="icon-mid bi bi-wallet me-2"></i> Wallet</a>
-                                          </li>
-                                          <li>
-                                            <hr class="dropdown-divider">
-                                          </li>
-                                          <li>
-                                            <a class="dropdown-item" href="{{ url_for('logout') }}"><i class="icon-mid bi bi-box-arrow-left me-2"></i>
-                                              Logout</a>
-                                          </li>
-                                        </ul>
-                                      </div>
-                                    
+                                    <div class="avatar avatar-xl">
+                                        <img src="{{url_for('static', filename='assets/images/faces/1.jpg')}}"
+                                            alt="Face 1">
+                                    </div>
+                                    <div class="ms-3 name">
+                                        <span class="font-bold">Welcome.. &nbsp;&nbsp;&nbsp;</span>
+                                        <span class="text-muted mb-0">{{ session['username']}}</span>
+                                    </div>
 
                                 </div>
                             </div>
                         </div>
-
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Recent Messages</h4>
+                            </div>
+                            <div class="card-content pb-4">
+                                <div class="recent-message d-flex px-4 py-3">
+                                    <div class="avatar avatar-lg">
+                                        <img src="{{url_for('static', filename='assets/images/faces/4.jpg')}}">
+                                    </div>
+                                    <div class="name ms-4">
+                                        <h5 class="mb-1">Hank Schrader</h5>
+                                        <h6 class="text-muted mb-0">@johnducky</h6>
+                                    </div>
+                                </div>
+                                <div class="recent-message d-flex px-4 py-3">
+                                    <div class="avatar avatar-lg">
+                                        <img src="{{url_for('static', filename='assets/images/faces/5.jpg')}}">
+                                    </div>
+                                    <div class="name ms-4">
+                                        <h5 class="mb-1">Dean Winchester</h5>
+                                        <h6 class="text-muted mb-0">@imdean</h6>
+                                    </div>
+                                </div>
+                                <div class="recent-message d-flex px-4 py-3">
+                                    <div class="avatar avatar-lg">
+                                        <img src="{{url_for('static', filename='assets/images/faces/1.jpg')}}">
+                                    </div>
+                                    <div class="name ms-4">
+                                        <h5 class="mb-1">John Dodol</h5>
+                                        <h6 class="text-muted mb-0">@dodoljohn</h6>
+                                    </div>
+                                </div>
+                                <div class="px-4">
+                                    <button class='btn btn-block btn-xl btn-outline-primary font-bold mt-3'>Start
+                                        Conversation</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Visitors Profile</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="chart-visitors-profile"></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -279,7 +294,7 @@
     <script src="https://cdn.lordicon.com/ritcuqlt.js"></script>
     <script src="{{url_for('static', filename='assets/extensions/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{url_for('static', filename='assets/js/pages/dashboard.js') }}"></script>
-    <script src="{{url_for('static', filename='assets/js/insert_data.js') }}"></script>
+    <script src="{{url_for('static', filename='assets/js/login.js') }}"></script>
 
 </body>
 

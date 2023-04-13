@@ -1,3 +1,4 @@
+import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
@@ -33,6 +34,7 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
+
 class Program:
     def __init__(self, id, name, path):
         self.id = id
@@ -67,10 +69,12 @@ class ProgramManager:
             self.programs.append(program)
 
     def add_program(self, name, path):
-        cur.execute('SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
+        cur.execute(
+            'SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
         count = cur.fetchone()[0]
         if count == 0:
-            cur.execute('INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
+            cur.execute(
+                'INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
             conn.commit()
             self.load_programs()
             return True
@@ -87,13 +91,15 @@ class ProgramManager:
             if program.is_running():
                 status = 'running'
                 date_start = datetime.datetime.now()
-                cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s', (status, date_start, program.id))
+                cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s',
+                            (status, date_start, program.id))
                 conn.commit()
 
             else:
                 status = 'stopped'
                 date_stop = datetime.datetime.now()
-                cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s', (status, date_stop, program.id))
+                cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s',
+                            (status, date_stop, program.id))
                 conn.commit()
 
     def count_total_machine(self):
@@ -119,7 +125,8 @@ class ProgramManager:
 
     def view_table_func(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT * FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name)")
+        cursor.execute(
+            "SELECT * FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name)")
         total_count = cursor.fetchall()
         return total_count
 
@@ -128,10 +135,10 @@ class ProgramManager:
             self.load_programs()
             self.check_running_programs()
 
+
 program_manager = ProgramManager()
 
 # Run the program manager in a separate thread
-import threading
 
 t = threading.Thread(target=program_manager.run)
 t.start()
@@ -141,49 +148,53 @@ with open('api.json') as f:
     users = json.load(f)
 
 # Define the route for the login page
+
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         form_username = request.form['username']
         form_password = request.form['password']
 
-        url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
-        response = requests.get(url).json()
-        
-        if response['result'] == False:
-            return  """<script>
-                        alert('Error')
-                        </script>"""
+        if form_username == '' and form_password == '':
+            return """<script>
+                            alert('Error')
+                            </script>"""
         else:
-            user_data = response["result"]
-            session['firstname'] = user_data['firstname'],
-            session['lastname'] = user_data['lastname'],
-            session['username'] = user_data['username']
-            print(session['username'])
-            return redirect(url_for('index', success=True))
-              
-        
-        # if url:
-        #     return '<span>True<span/>'
-        # else:
-        #     return '<span>Error<span/>'
-        # data = json.loads(request_var.text)
-        # # Check if the entered username and password are valid
-        # username = request.json['username']
-        # password = request.json['password']
-        # if username in users and users[username] == password:
-        #     # Redirect to the index page with a success message
-        #     session['logged_in'] = True
-        #     session['username'] = username
-        #     return redirect(url_for('index', success=True))
-        # else:
-        #     # Return an error message as JSON
-        #     return jsonify({'error': 'Invalid username or password'})
+
+            url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
+            response = requests.get(url).json()
+
+            if response['result'] == False:
+                return """<script>
+                            alert('Error')
+                            </script>"""
+            else:
+                user_data = response["result"]
+                session['firstname'] = user_data['firstname']
+                session['lastname'] = user_data['lastname']
+                session['username'] = user_data['username']
+                session['fullname'] = user_data['fullname']
+                session['employee_position'] = user_data['employee_position']
+
+                photo_url = session['photo_url'] = user_data['photo_url']
+
+                if photo_url == False:
+                    session['photo_url'] = """assets/compiled/jpg/1.jpg"""
+                else:
+                    hris = "http://hris.teamglac.com/"
+                    session['photo_url'] = hris + user_data['photo_url']
+
+                print(session['username'])
+                return redirect(url_for('index', success=True))
+
     else:
         # Display the login form
         return render_template('auth-login.html')
 
 # Define the route for the index page
+
+
 @app.route('/index', methods=['GET'])
 def index():
     # Get the success parameter from the URL
@@ -193,69 +204,79 @@ def index():
     count_machines_stopped = program_manager.count_total_machine_stopped()
     success = request.args.get('success')
     username = session.get('username')
-    return render_template('index.html', username=username, success=success, count_machines=count_machines,
+    return render_template('layout-vertical-navbar.html', username=username, success=success, count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
+
 
 @app.route('/process', methods=['POST'])
 def process():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
- 
+
     msg = ''
     machine_name = request.form['machine_name']
     program_path = request.form['program_path']
     status = 'stopped'
-    cursor.execute("INSERT INTO machine_tbl (name, path, status) VALUES (%s,%s,%s)", (machine_name, program_path, status))
+    cursor.execute("INSERT INTO machine_tbl (name, path, status) VALUES (%s,%s,%s)",
+                   (machine_name, program_path, status))
     conn.commit()
     msg = 'success'
-    return jsonify({'name' : msg})
+    return jsonify({'name': msg})
 
-@app.route("/datatable", methods=["POST"])
-def datatable():
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    draw = request.form['draw']
-    row = int(request.form['start'])
-    rowperpage = int(request.form['length'])
-    searchValue = request.form["search[value]"]
-    likeString = "{}%".format(searchValue)
 
-    cursor.execute("SELECT count(*) as allcount from machine_tbl WHERE name LIKE %s", (likeString,))
-    rsallcount = cursor.fetchone()
-    totalRecordwithFilter = rsallcount['allcount']
-    print(totalRecordwithFilter)
-
-    # Total number of records without filtering
-    cursor.execute("select count(*) as allcount from machine_tbl")
-    rsallcount = cursor.fetchone()
-    totalRecords = rsallcount['allcount']
-    print(totalRecords)
-
-    if searchValue == '':
-        cursor.execute('SELECT * FROM machine_tbl LIMIT {limit} OFFSET {offset}'.format(limit=rowperpage, offset=row))
-        programlist = cursor.fetchall()
-    else:
-        cursor.execute("SELECT * FROM machine_tbl WHERE name LIKE %s LIMIT %s OFFSET %s;", (likeString, rowperpage, row,))
-        programlist = cursor.fetchall()
-
-    data = []
-    for row in programlist:
-       
-        data.append({
-            'id': row['id'],
-            'name': row['name'],
-            'path': row['path'],
-            'status': row['status'],
-            'date_start': row['date_start'],
-            'date_stop': row['date_stop'],
+@app.route('/machines')
+def get_machines():
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM machine_tbl")
+    rows = cursor.fetchall()
+    machines = []
+    for row in rows:
+        machines.append({
+            'id': row[0],
+            'name': row[1],
+            'path': row[2],
+            'status': row[3],
+            'date_start': row[4],
+            'date_stop': row[5],
         })
+    cursor.close()
+    return jsonify({'data': machines})
 
-    response = {
-        'draw': draw,
-        'recordsTotal': totalRecords,
-        'recordsFiltered': totalRecordwithFilter,
-        'data': data,
-    }
 
-    return jsonify(response)
+@app.route('/machines/update', methods=['POST'])
+def update_machine():
+    cursor = conn.cursor()
+    id = request.form['id']
+    name = request.form['edit_machine_name']
+    path = request.form['edit_program_path']
+    cursor.execute(
+        "UPDATE machine_tbl SET name = %s, path = %s WHERE id = %s", (name, path, id))
+    conn.commit()
+    cursor.close()
+    return jsonify({'success': True})
+
+
+@app.route('/card_details')
+def get_card_details():
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM machine_tbl')
+    card_data = cursor.fetchall()
+    cursor.close()
+
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'name': row[1],
+            'path': row[2],
+            'status': row[3],
+            'date_start': str(row[4]),
+            'date_stop': str(row[5])
+        }
+        cards.append(card)
+
+    return jsonify(cards)
+
 
 @app.route('/data_table')
 def view_tables():
@@ -263,17 +284,29 @@ def view_tables():
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
 
-@app.route('/program/<int:id>', methods=['DELETE'])
-def delete_program(id):
-    program_manager = ProgramManager()
-    program_manager.delete_program(id)
+
+@app.route('/machines/delete', methods=['POST'])
+def delete_machine():
+    cursor = conn.cursor()
+    id = request.form['id']
+    cursor.execute("DELETE FROM machine_tbl WHERE id = %s", (id,))
+    conn.commit()
+    cursor.close()
     return jsonify({'success': True})
+
+
+@app.route('/all_device')
+def all_device():
+    print('Go to All Devices')
+    return render_template('layout-vertical-1-column.html')
+
 
 @app.route('/logout')
 def logout():
     # Clear the session and redirect to the login page
     session.clear()
     return redirect(url_for('login', success=True))
+
 
 if __name__ == '__main__':
     app.run(host="localhost", port=8083, debug=True)

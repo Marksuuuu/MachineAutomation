@@ -18,6 +18,18 @@
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/datatables.css') }}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/@icon/dripicons/dripicons.css') }}">
+
+    <style>
+      td.details-control {
+        background: url('../static/assets/images/icon/details_open.png') no-repeat center center;
+        cursor: pointer;
+    }
+    tr.details td.details-control {
+        background: url('../static/assets/images/icon/details_close.png') no-repeat center center;
+    }
+
+
+    </style>
 </head>
 
 <body>
@@ -100,7 +112,7 @@
             <div class="page-title">
                 <div class="row">
                     <div class="col-12 col-md-6 order-md-1 order-last">
-                        <h3>All Machines Status</h3>
+                        <h3>All Controller Status</h3>
                         <p class="text-subtitle text-muted"></p>
                     </div>
                     <div class="col-12 col-md-6 order-md-2 order-first">
@@ -115,6 +127,7 @@
                 </div>
             </div>
 
+            <!-- for add machines -->
             <!-- Basic Tables start -->
             <section class="section">
                 <div class="card">
@@ -122,16 +135,16 @@
                         <div class="form-group">
                         <!-- Button trigger for login form modal -->
                         <button type="button" style="float: right;" class="btn btn-primary text-right" data-bs-toggle="modal" data-bs-target="#inlineForm">
-                            <span>ADD MACHINE</span>
+                            <span>ADD CONTROLLER</span>
                         </button>
 
-                        <!--login form Modal -->
+                        <!--add machine form Modal -->
                         <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33" style="display: none;" aria-hidden="true">
                           <div class="modal-dialog modal-dialog-top modal-dialog-scrollable" role="document">
                             <div class="modal-content">
                               <div class="modal-header">
                                 <h4 class="modal-title" id="myModalLabel33">
-                                  Add Machine
+                                  Add Controller
                                 </h4>
                                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -139,35 +152,79 @@
                               </div>
                               <form action="#" id='add-machine'>
                                 <div class="modal-body">
-                                  <label for="machine_name">Machine Name: </label>
-                                  <div class="form-group">
-                                    <input id="machine_name" name='machine_name' type="text" placeholder="Machine name" class="form-control">
-                                  </div>
-                                  <label for="program_path">Program Path: </label>
-                                  <div class="form-group">
-                                    <input id="program_path" name='program_path' placeholder="Program Path" class="form-control">
+                                  
+                                  <label for="machine_name">Controller Name: </label>
+                                  <input type="text" class="form-control" id="basicInput" placeholder="Controller Name">
+                                  <label for="machine_name">Machines Name: </label>
+                                  <div class="input-group mb-3" id="addContainer">
+                                    <input type="text" name='machine_name' class="form-control" placeholder="Machine Name" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                                    <input type="text" name='machine_path' class="form-control" placeholder="Machine Path" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                                    <button class="btn btn-primary" type="button" id="addButton">
+                                      Button
+                                    </button>
                                   </div>
                                 </div>
                                 <div class="modal-footer">
                                   </button>
                                   <button type="submit" class="btn btn-primary ms-1" data-bs-dismiss="modal">
                                     <i class="bx bx-check d-block d-sm-none"></i>
-                                    <span class="d-none d-sm-block">Add</span>
+                                    <span class="d-none d-sm-block">Submit</span>
                                   </button>
                                 </div>
                               </form>
                             </div>
                           </div>
                         </div>
+
+
+                        <div class="modal fade text-left" id="editMachine" tabindex="-1" aria-labelledby="myModalLabel33" style="display: none;" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-top modal-dialog-scrollable" role="document">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h4 class="modal-title" id="myModalLabel33">
+                                    Edit Controller
+                                  </h4>
+                                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                  </button>
+                                </div>
+                                <form action="#" id='edit-machine'>
+                                  <div class="modal-body">
+                                    <div class="input-group mb-3">
+                                      <button class="btn btn-primary" type="button" id="button-addon1">
+                                        Button
+                                      </button>
+                                      <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                    </button>
+                                    <button type="submit" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                                      <i class="bx bx-check d-block d-sm-none"></i>
+                                      <span class="d-none d-sm-block">Add</span>
+                                    </button>
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
                       </div>
                     </div>
+                    <!-- end -->
+
+
+                    <!-- for edit -->
+
+                    
+                  <!-- end -->
 
                     <div class="card-body">
-                        <table class="table" id="data_tbl">
+                        <table class="table" id="machine-table">
                             <thead>
                                 <tr>
+                                    <th></th>
                                     <th>ID</th>
-                                    <th>Machine Name</th>
+                                    <th>Controller Name</th>
                                     <th>Program Used</th>
                                     <th>Status</th>
                                     <th>Date Start</th>
