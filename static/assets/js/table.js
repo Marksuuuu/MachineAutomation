@@ -34,7 +34,8 @@ $(document).ready(function () {
       { data: 'date_stop' },
       {
         data: null, render: function (data, type, row) {
-          return '<button type="button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit edit-btn" data-id="' + row.id + '"></button> ' +
+          return '<button type="button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit show-btn" data-id="' + row.id + '"></button> ' +
+           '<button type="button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit edit-btn" data-id="' + row.id + '"></button> ' +
             '<button type="button" class="btn btn-danger rounded-pill icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button>';
         }
       }
@@ -86,6 +87,12 @@ $(document).ready(function () {
     });
   });
 
+  $('#machine-table').on('click', '.show-btn', function(){
+    // console.log()
+    var id = $(this).attr('data-id')
+    format(id)
+  })
+
 
   $('#machine-table').on('click', '.delete-btn', function () {
     Swal.fire({
@@ -129,40 +136,49 @@ $(document).ready(function () {
 });
 
 
-function format(d) {
-  var body = '';
-  return (
-    body += '<table class="table">'
-    + '<thead>'
-    + '<tr>'
-    + '<th scope="col">#</th>'
-    + '<th scope="col">First</th>'
-    + '<th scope="col">Last</th>'
-    + '<th scope="col">Handle</th>'
-    + '</tr >'
-    + '</thead >'
-    + '<tbody>'
-    + '<tr>'
-    + '<th scope="row">1</th>'
-    + '<td>Mark</td>'
-    + '<td>Otto</td>'
-    + '<td>@mdo</td>'
-    + '</tr>'
-    + '<tr>'
-    + '<th scope="row">2</th>'
-    + '<td>Jacob</td>'
-    + '<td>Thornton</td>'
-    + '<td>@fat</td>'
-    + '</tr>'
-    + '<tr>'
-    + '<th scope="row">3</th>'
-    + '<td>Larry</td>'
-    + '<td>the Bird</td>'
-    + '<td>@twitter</td>'
-    + '</tr>'
-    + '</tbody>'
-    + '</table >'
-  );
+function format(id) {
+  $.ajax({
+    url: '/machines_child',
+    method: 'POST',
+    data: { id: id },
+    success: function(data){
+      console.log(data)
+      var body = '';
+      // return (
+      //   body += '<table class="table">'
+      //   + '<thead>'
+      //   + '<tr>'
+      //   + '<th scope="col">#</th>'
+      //   + '<th scope="col">First</th>'
+      //   + '<th scope="col">Last</th>'
+      //   + '<th scope="col">Handle</th>'
+      //   + '</tr >'
+      //   + '</thead >'
+      //   + '<tbody>'
+      //   + '<tr>'
+      //   + '<th scope="row">1</th>'
+      //   + '<td>'+machines.name+'</td>'
+      //   + '<td>Otto</td>'
+      //   + '<td>@mdo</td>'
+      //   + '</tr>'
+      //   // + '<tr>'
+      //   // + '<th scope="row">2</th>'
+      //   // + '<td>Jacob</td>'
+      //   // + '<td>Thornton</td>'
+      //   // + '<td>@fat</td>'
+      //   // + '</tr>'
+      //   // + '<tr>'
+      //   // + '<th scope="row">3</th>'
+      //   // + '<td>Larry</td>'
+      //   // + '<td>the Bird</td>'
+      //   // + '<td>@twitter</td>'
+      //   // + '</tr>'
+      //   + '</tbody>'
+      //   + '</table >'
+      // );
+    }
+  })
+
 }
 
 

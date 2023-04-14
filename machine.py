@@ -246,6 +246,26 @@ def get_machines():
     cursor.close()
     return jsonify({'data': machines})
 
+
+@app.route('/machines_child', methods=['POST'])
+def machines_child():
+    child_id = request.form['id']
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM machine_tbl WHERE id = %s",[child_id])
+    rows = cursor.fetchall()
+    machines = []
+    for row in rows:
+        machines.append({
+            'id': row[0],
+            'path': row[1],
+            'name': row[2],
+            'status': row[3],
+            'date_start': row[4],
+            'date_stop': row[5],
+        })
+    cursor.close()
+    return jsonify({'data': machines})
+
 @app.route('/machines/update', methods=['POST'])
 def update_machine():
     cursor = conn.cursor()
