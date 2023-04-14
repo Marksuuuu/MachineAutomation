@@ -1,58 +1,3 @@
-$(document).ready(function () {
-  $('form').on('submit', function (event) {
-    var machine_name = $('#machine_name').val()
-    var program_path = $('#program_path').val()
-    var status = ''
-    var date_start = ''
-    var date_stop = ''
-
-    if (program_path == '' && program_path == '') {
-      Swal.fire({
-        title: 'Error!',
-        text: 'Please Enter Something',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      })
-      event.preventDefault();
-    } else {
-      $.ajax({
-        data: {
-          machine_name: machine_name,
-          program_path: program_path,
-          status: status,
-          date_start: date_start,
-          date_stop: date_stop
-        },
-        type: 'POST',
-        url: '/process',
-        success: function () {
-          var newRow = '<tr><td>' + machine_name + '</td><td>' + program_path + '</td><td>' + status + '</td><td>' + date_start + '</td><td>' + date_stop + '</td></tr>';
-          $('#data_tbl').append(newRow);
-        },
-      })
-        .done(function (data) {
-          if (data.error) {
-            Swal.fire({
-              title: 'Error!',
-              text: 'Do you want to continue',
-              icon: 'error',
-              confirmButtonText: 'Ok',
-              timer: 2000
-            })
-          }
-          else {
-            Swal.fire({
-              icon: 'success',
-              title: 'Saved!',
-              showConfirmButton: false,
-              timer: 2000
-            })
-          }
-        });
-      event.preventDefault();
-    }
-  });
-});
 
 $(document).ready(function () {
   // Define the DataTable
@@ -133,7 +78,7 @@ $(document).ready(function () {
 
   $('#machine-table').on('click', '.edit-btn', function () {
     var id = $(this).data('id');
-    $.get('/machines/' + id, function (machine) {
+    $.get('/machines/delete/' + id, function (machine) {
       machineIdField.val(machine.id);
       machineNameField.val(machine.name);
       machinePathField.val(machine.path);

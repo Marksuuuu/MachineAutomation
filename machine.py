@@ -10,9 +10,25 @@ import datetime
 import json
 import hashlib
 import requests
+import os
 
 app = Flask(__name__)
 app.secret_key = 'mark'
+UPLOAD_FOLDER = 'static\\assets\\uploads'
+
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+  
+ALLOWED_EXTENSIONS = set(['py'])
+
+def allowed_file(filename):
+    for extension in ALLOWED_EXTENSIONS:
+        if '.' in filename and filename.rsplit('.', 1)[1].lower() == extension:
+            return True
+    else:
+        flash('This is a message to display in the SweetAlert 2 popup.')
+    return (flash)
 
 # Database configuration
 db_host = 'localhost'
@@ -34,7 +50,6 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-
 class Program:
     def __init__(self, id, name, path):
         self.id = id
@@ -55,7 +70,6 @@ class Program:
             subprocess.check_call(['python', self.path])
         except subprocess.CalledProcessError as e:
             print(f"Error running {self.name}: {e}")
-
 
 class ProgramManager:
     def __init__(self):
@@ -135,7 +149,6 @@ class ProgramManager:
             self.load_programs()
             self.check_running_programs()
 
-
 program_manager = ProgramManager()
 
 # Run the program manager in a separate thread
@@ -143,12 +156,7 @@ program_manager = ProgramManager()
 t = threading.Thread(target=program_manager.run)
 t.start()
 
-# Load users from JSON file
-with open('api.json') as f:
-    users = json.load(f)
-
 # Define the route for the login page
-
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -194,7 +202,6 @@ def login():
 
 # Define the route for the index page
 
-
 @app.route('/index', methods=['GET'])
 def index():
     # Get the success parameter from the URL
@@ -206,7 +213,6 @@ def index():
     username = session.get('username')
     return render_template('layout-vertical-navbar.html', username=username, success=success, count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
-
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -222,7 +228,6 @@ def process():
     msg = 'success'
     return jsonify({'name': msg})
 
-
 @app.route('/machines')
 def get_machines():
     cursor = conn.cursor()
@@ -232,15 +237,14 @@ def get_machines():
     for row in rows:
         machines.append({
             'id': row[0],
-            'name': row[1],
-            'path': row[2],
+            'path': row[1],
+            'name': row[2],
             'status': row[3],
             'date_start': row[4],
             'date_stop': row[5],
         })
     cursor.close()
     return jsonify({'data': machines})
-
 
 @app.route('/machines/update', methods=['POST'])
 def update_machine():
@@ -254,7 +258,6 @@ def update_machine():
     cursor.close()
     return jsonify({'success': True})
 
-
 @app.route('/card_details')
 def get_card_details():
     cursor = conn.cursor()
@@ -267,8 +270,8 @@ def get_card_details():
     for row in card_data:
         card = {
             'id': row[0],
-            'name': row[1],
-            'path': row[2],
+            'path': row[1],
+            'name': row[2],
             'status': row[3],
             'date_start': str(row[4]),
             'date_stop': str(row[5])
@@ -277,13 +280,35 @@ def get_card_details():
 
     return jsonify(cards)
 
+@app.route("/addMachines",methods=["POST","GET"])
+def addMachines():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        machinesData = request.files.getlist('addMachine[]')
+        controllersData = request.form['controllerInput']
+        
+        for value in machinesData:  
+            # file_content = value.read()
+            cur.execute("INSERT INTO machine_tbl (name, path) VALUES (%s, %s)",[value.filename, controllersData])
+            conn.commit()       
+            filename = os.path.basename(value.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Remove old file with the same name if it exists
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            value.save(filepath)
+        cur.close()
+        msg = 'Success'
+        return jsonify(msg)
+    else:
+        msg = 'Invalid request method'
+    return jsonify(msg)
 
 @app.route('/data_table')
 def view_tables():
     program_manager = ProgramManager()
     view_all_machine_and_status = program_manager.view_table_func()
     return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
-
 
 @app.route('/machines/delete', methods=['POST'])
 def delete_machine():
@@ -294,12 +319,10 @@ def delete_machine():
     cursor.close()
     return jsonify({'success': True})
 
-
 @app.route('/all_device')
 def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
-
 
 @app.route('/logout')
 def logout():

@@ -1,48 +1,49 @@
-function submitForm(event) {
-  event.preventDefault();
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-  const data = {
-    username: username,
-    password: password
-  };
-  fetch('/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  }).then(response => {
-    if (response.ok) {
-      window.location.href = '/index?success=true';
-    } else {
-      response.json().then(data => {
-        alert(data.error);
-      });
-    }
-  }).catch(error => {
-    alert('An error occurred: ' + error);
-  });
-}
+$(document).ready(function () {
+    var MaxInputs = 8; //maximum input boxes allowed
+    var InputsWrapper = $("#addContainer"); //Input boxes wrapper ID
+    var AddButton = $("#addButton"); //Add button ID
 
+    var x = InputsWrapper.find('div').length; //initial text box count
+    var FieldCount = x; //to keep track of text box added
 
+    $(AddButton).click(function (e) { //on add input button click
+        if (x < MaxInputs) { //max input box allowed
+            FieldCount++; //text box added increment
+            //add input box
+            $(InputsWrapper).append('<div class="input-group mb-3"><input type="file" name="addMachine[]" class="form-control addMachineClass" placeholder="Machine Name" id="field_' + FieldCount + '" aria-label="Example text with button addon" aria-describedby="button-addon1"/><button href="#" type="button" class="btn btn-danger removeclass">×</button></div>');
+            x++; //text box increment
+        }
+        return false;
+    });
 
-// $(document).ready(function() {
-//   $('#addButton').click(function() {
-//     var machine_name = $('input[name="machine_name"]').val();
-//     var machine_path = $('input[name="machine_path"]').val();
-//     $.ajax({
-//       url: '/add-row',
-//       type: 'POST',
-//       data: {'machine_name': machine_name, 'machine_path': machine_path},
-//       success: function(response) {
-//         $('#addContainer').append(response);
-//         $('input[name="machine_name"]').val('').appendTo('#addContainer');
-//         $('input[name="machine_path"]').val('').appendTo('#addContainer');
-//       },
-//       error: function(error) {
-//         console.log(error);
-//       }
-//     });
-//   });
-// });
+    $("body").on("click", ".removeclass", function (e) { //user click on remove text
+        if (x > 1) {
+            $(this).parent('div').remove(); //remove text box
+            x--; //decrement textbox
+        }
+        return false;
+    })
+
+    $('#submit').click(function () {
+        var form = $('#add-machine')[0];
+        var formData = new FormData(form);
+        formData.append('controllerInput', formData.get('controllerInput'));
+        $.ajax({
+            url: "/addMachines",
+            method: "POST",
+            data: formData,
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    showConfirmButton: false,
+                    timer: 2000
+                })
+                $('#resultbox').html(data);
+            }
+        });
+    });
+});

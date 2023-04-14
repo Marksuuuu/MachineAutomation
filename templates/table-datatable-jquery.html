@@ -150,23 +150,21 @@
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
                               </div>
-                              <form action="#" id='add-machine'>
-                                <div class="modal-body">
-                                  
+                              <form action="#" id='add-machine' name='add-machine'>
+                                <div class="modal-body device-id">
                                   <label for="machine_name">Controller Name: </label>
-                                  <input type="text" class="form-control" id="basicInput" placeholder="Controller Name">
+                                  <br>
+                                  <input type="text" class="form-control" name='controllerInput' placeholder="Controller Name">
                                   <label for="machine_name">Machines Name: </label>
+                                  <br>
                                   <div class="input-group mb-3" id="addContainer">
-                                    <input type="text" name='machine_name' class="form-control" placeholder="Machine Name" aria-label="Example text with button addon" aria-describedby="button-addon1">
-                                    <input type="text" name='machine_path' class="form-control" placeholder="Machine Path" aria-label="Example text with button addon" aria-describedby="button-addon1">
-                                    <button class="btn btn-primary" type="button" id="addButton">
-                                      Button
-                                    </button>
+                                    <div class="input-group mb-3"><input type="file" name="addMachine[]" class="form-control" required placeholder="Machine Name"  id="field_'+ FieldCount +'" aria-label="Example text with button addon" aria-describedby="button-addon1"/></p><button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">&#43;</button></div>
                                   </div>
+                                  <!-- <button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">Add Machine Field</button>-->
                                 </div>
                                 <div class="modal-footer">
                                   </button>
-                                  <button type="submit" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                                  <button type="button" id='submit' class="btn btn-primary ms-1" data-bs-dismiss="modal">
                                     <i class="bx bx-check d-block d-sm-none"></i>
                                     <span class="d-none d-sm-block">Submit</span>
                                   </button>
@@ -194,7 +192,7 @@
                                       <button class="btn btn-primary" type="button" id="button-addon1">
                                         Button
                                       </button>
-                                      <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                                      <input type="text" class="form-control" id='name-path' placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
                                     </div>
                                   </div>
                                   <div class="modal-footer">
@@ -225,7 +223,7 @@
                                     <th></th>
                                     <th>ID</th>
                                     <th>Controller Name</th>
-                                    <th>Program Used</th>
+                                    <th>Machine Name</th>
                                     <th>Status</th>
                                     <th>Date Start</th>
                                     <th>Date Stop</th>
@@ -250,6 +248,7 @@
     <script src="{{url_for('static', filename='assets/js/pages/datatables.js') }}"></script>
     <script src="{{url_for('static', filename='assets/js/table.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{url_for('static', filename='assets/js/insert_data.js') }}"></script>
 
 
 </body>
