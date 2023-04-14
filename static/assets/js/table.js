@@ -7,74 +7,19 @@ $(document).ready(function () {
     ajax: '/machines',
     lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
     columns: [
-      {
-        class: 'details-control',
-        orderable: false,
-        data: null,
-        defaultContent: '',
-      },
+  
       { data: 'id' },
       { data: 'name' },
-      { data: 'path' },
-      {
-        data: 'status',
-        render: function (data, type, row, meta) {
-          var badgeClass = '';
-          if (data == 'running') {
-            badgeClass = 'badge bg-success"';
-          } else if (data == 'stopped') {
-            badgeClass = 'badge bg-danger';
-          } else {
-            badgeClass = 'badge bg-secondary';
-          }
-          return '<span class="' + badgeClass + '">' + data + '</span>';
-        }
-      },
-      { data: 'date_start' },
-      { data: 'date_stop' },
       {
         data: null, render: function (data, type, row) {
-          return '<button type="button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit show-btn" data-id="' + row.id + '"></button> ' +
-           '<button type="button" class="btn btn-primary rounded-pill icon dripicons dripicons-document-edit edit-btn" data-id="' + row.id + '"></button> ' +
-            '<button type="button" class="btn btn-danger rounded-pill icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button>';
+          return '<button type="button" class="btn btn-info rounded-pill icon icon dripicons dripicons-expand-2 show-btn" data-id="' + row.id + '"></button> '+ 
+          ' <button type="button" class="btn btn-danger rounded-pill icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button>';
         }
       }
     ],
     "order": [[1, 'asc']]
   });
 
-
-  var machineModal = $('#editMachine');
-  var detailRows = [];
-
-
-  $('#machine-table tbody').on('click', 'tr td.details-control', function () {
-    var tr = $(this).closest('tr');
-    var row = table.row(tr);
-    var idx = detailRows.indexOf(tr.attr('id'));
-
-    if (row.child.isShown()) {
-      tr.removeClass('details');
-      row.child.hide();
-
-      // Remove from the 'open' array
-      detailRows.splice(idx, 1);
-    } else {
-      tr.addClass('details');
-      row.child(format(row.data())).show();
-
-      // Add to the 'open' array
-      if (idx === -1) {
-        detailRows.push(tr.attr('id'));
-      }
-    }
-  });
-
-  table.on('draw', function () {
-    detailRows.forEach(function (id, i) {
-      $('#' + id + ' td.details-control').trigger('click');
-    });
-  });
 
 
   $('#machine-table').on('click', '.edit-btn', function () {
@@ -87,12 +32,80 @@ $(document).ready(function () {
     });
   });
 
-  $('#machine-table').on('click', '.show-btn', function(){
-    // console.log()
-    var id = $(this).attr('data-id')
-    format(id)
-  })
+  // $('#machine-table').on('click', '.show-btn', function(){
+  //   var id = $(this).attr('data-id'); // Get the ID value from the element attribute
+  //   $.ajax({
+  //     url: '/get_name',
+  //     method: 'POST',
+  //     data: {id: id}, // Pass the ID in the data payload
+  //     success: function(response) {
+        
+  //     },
+  //     error: function(error) {
+  //       console.log(error);
+  //     }
+  //   });
+  // });
 
+  $('#machine-table').on('click', '.show-btn', function(){
+    var id = $(this).attr('data-id'); // Get the ID value from the element attribute
+  
+    // AJAX call to get data
+    $.ajax({
+      url: '/get_name',
+      method: 'POST',
+      data: {id: id}, // Pass the ID in the data payload
+      success: function(response) {
+        var data = response.result; // Extract the result data from the response
+        // Check if data is not empty
+        if (data !== null) {
+          // Generate HTML for table rows
+          var html = '';
+          for (var i = 0; i < data.length; i++) {
+            var id = data[i][0]; // Accessing ID
+            var name = data[i][2]; // Accessing Name
+            var status = data[i][3]; // Accessing status
+            var date_start = data[i][4]; // Accessing date_start
+            var date_stop = data[i][5]; // Accessing date_stop
+  
+            var badgeClass = '';
+            if (status == 'running') {
+              badgeClass = 'badge bg-success"';
+              badge = '<span class="' + badgeClass + '">' + status + '</span>'
+            } else if (status == 'stopped') {
+              badgeClass = 'badge bg-danger';
+              badge = '<span class="' + badgeClass + '">' + status + '</span>'
+            } else {
+              badgeClass = 'badge bg-secondary';
+              badge = '<span class="' + badgeClass + '">' + status + '</span>'
+            }
+            html += '<tr>';
+            html += '<td>' + id + '</td>';
+            html += '<td>' + name + '</td>';
+            html += '<td>' + badge + '</td>';
+            html += '<td>' + date_start + '</td>';
+            html += '<td>' + date_stop + '</td>';
+            html += '</tr>';
+          }
+  
+          // Set the generated HTML as the content of the modal body
+          $('#modal-data').html(html);
+  
+          // Show the modal
+          $('#myModal').modal('show');
+        } else {
+          // Handle case when data is empty or null
+          $('#modal-data').html('<tr><td colspan="4">No data available</td></tr>');
+          $('#myModal').modal('show');
+        }
+      },
+      error: function(error) {
+        console.log(error);
+      }
+    });
+  });
+  
+  
 
   $('#machine-table').on('click', '.delete-btn', function () {
     Swal.fire({
@@ -136,50 +149,6 @@ $(document).ready(function () {
 });
 
 
-function format(id) {
-  $.ajax({
-    url: '/machines_child',
-    method: 'POST',
-    data: { id: id },
-    success: function(data){
-      console.log(data)
-      var body = '';
-      // return (
-      //   body += '<table class="table">'
-      //   + '<thead>'
-      //   + '<tr>'
-      //   + '<th scope="col">#</th>'
-      //   + '<th scope="col">First</th>'
-      //   + '<th scope="col">Last</th>'
-      //   + '<th scope="col">Handle</th>'
-      //   + '</tr >'
-      //   + '</thead >'
-      //   + '<tbody>'
-      //   + '<tr>'
-      //   + '<th scope="row">1</th>'
-      //   + '<td>'+machines.name+'</td>'
-      //   + '<td>Otto</td>'
-      //   + '<td>@mdo</td>'
-      //   + '</tr>'
-      //   // + '<tr>'
-      //   // + '<th scope="row">2</th>'
-      //   // + '<td>Jacob</td>'
-      //   // + '<td>Thornton</td>'
-      //   // + '<td>@fat</td>'
-      //   // + '</tr>'
-      //   // + '<tr>'
-      //   // + '<th scope="row">3</th>'
-      //   // + '<td>Larry</td>'
-      //   // + '<td>the Bird</td>'
-      //   // + '<td>@twitter</td>'
-      //   // + '</tr>'
-      //   + '</tbody>'
-      //   + '</table >'
-      // );
-    }
-  })
-
-}
 
 
 

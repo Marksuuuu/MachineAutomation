@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    function fetchAndCreateCards() {
     $.ajax({
         url: '/card_details',
         method: 'GET',
@@ -8,16 +9,18 @@ $(document).ready(function () {
                 var machine_status = item.status;
                 var body = '';
 
-                if (machine_status == 'stopped') {
-                    stat = 'bg-danger';
-                } else if (machine_status == 'running') {
-                    stat = 'bg-success'
-                } else {
+                if (machine_status == 'IN PRODUCTION' || machine_status == "STARTED") {
+                    stat = 'bg-success';
+                } else if (machine_status == 'STOP DOWNTIME' || machine_status == 'MACHINE DOWNTIME') {
+                    stat = 'bg-danger'
+                } else if (machine_status == 'IDLE' || machine_status == 'MACHINE DOWNTIME'){
+                    stat = 'bg-primary'
+                }else{
                     stat = ''
                 }
                 body += '<div class="col-lg-4"><div class="card card-margin ' + stat + '">'
                     + '<div class="card-header no-border">'
-                    + '<h5 class="card-title">' + item.name + '</h5>'
+                    + '<h5 class="card-title">' + item.current_path + '</h5>'
                     + '</div>'
                     + '<div class="card-body pt-0">'
                     + '<div class="widget-49">'
@@ -27,7 +30,7 @@ $(document).ready(function () {
                     + '<span class="widget-49-date-month">apr</span>'
                     + '</div>'
                     + '<div class="widget-49-meeting-info">'
-                    + '<span class="widget-49-pro-title">' + item.path + '</span>'
+                    + '<span class="widget-49-pro-title">' + item.date_time + '</span>'
                     + '<span class="widget-49-meeting-time">12:00 to 13.30 Hrs</span>'
                     + '</div>'
                     + '</div>'
@@ -58,4 +61,16 @@ $(document).ready(function () {
             console.log('Error fetching data from PostgreSQL');
         }
     });
+
+}
+fetchAndCreateCards();
+
+function autoRefresh() {
+    location.reload();
+}
+
+// Set an interval to call the autoRefresh function every 60,000 milliseconds (1 minute)
+setInterval(autoRefresh, 30000);
+
 });
+

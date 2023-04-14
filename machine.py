@@ -1,6 +1,6 @@
 import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_socketio import SocketIO, emit
 import psycopg2
 import psycopg2.extras
 import psutil
@@ -14,6 +14,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'mark'
+socketio = SocketIO(app)
 UPLOAD_FOLDER = 'static\\assets\\uploads'
 
 
@@ -27,9 +28,7 @@ def allowed_file(filename):
         if '.' in filename and filename.rsplit('.', 1)[1].lower() == extension:
             return True
     else:
-        flash('This is a message to display in the SweetAlert 2 popup.')
-    return (flash)
-
+        return "<script>alert('Unsupported FIle type') </script>"
 # Database configuration
 db_host = 'localhost'
 db_port = 5432
@@ -144,6 +143,29 @@ class ProgramManager:
         total_count = cursor.fetchall()
         return total_count
 
+
+        # Define an event handler for the "message" event
+    @socketio.on('message')
+    def handle_message(data):
+        # Handle the WebSocket message here
+        # You can access the data from the client through the 'data' parameter
+        # For example, you can emit a response back to the client using the 'emit' function
+        emit('response', {'message': 'Server response'})
+
+    # Define an event handler for the "connect" event
+    @socketio.on('connect')
+    def handle_connect():
+        # Handle the WebSocket connect event
+        # You can perform any necessary actions when a client connects to the WebSocket
+        print('Client connected')
+
+    # Define an event handler for the "disconnect" event
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        # Handle the WebSocket disconnect event
+        # You can perform any necessary actions when a client disconnects from the WebSocket
+        print('Client disconnected')
+
     def run(self):
         while True:
             self.load_programs()
@@ -161,39 +183,39 @@ t.start()
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        form_username = request.form['username']
-        form_password = request.form['password']
+        # form_username = request.form['username']
+        # form_password = request.form['password']
 
-        if form_username == '' and form_password == '':
-            return """<script>
-                            alert('Error')
-                            </script>"""
-        else:
+        # if form_username == '' and form_password == '':
+        #     return """<script>
+        #                     alert('Error')
+        #                     </script>"""
+        # else:
 
-            url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
-            response = requests.get(url).json()
+        #     url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
+        #     response = requests.get(url).json()
 
-            if response['result'] == False:
-                return """<script>
-                            alert('Error')
-                            </script>"""
-            else:
-                user_data = response["result"]
-                session['firstname'] = user_data['firstname']
-                session['lastname'] = user_data['lastname']
-                session['username'] = user_data['username']
-                session['fullname'] = user_data['fullname']
-                session['employee_position'] = user_data['employee_position']
+        #     if response['result'] == False:
+        #         return """<script>
+        #                     alert('Error')
+        #                     </script>"""
+        #     else:
+        #         user_data = response["result"]
+        #         session['firstname'] = user_data['firstname']
+        #         session['lastname'] = user_data['lastname']
+        #         session['username'] = user_data['username']
+        #         session['fullname'] = user_data['fullname']
+        #         session['employee_position'] = user_data['employee_position']
 
-                photo_url = session['photo_url'] = user_data['photo_url']
+        #         photo_url = session['photo_url'] = user_data['photo_url']
 
-                if photo_url == False:
-                    session['photo_url'] = """assets/compiled/jpg/1.jpg"""
-                else:
-                    hris = "http://hris.teamglac.com/"
-                    session['photo_url'] = hris + user_data['photo_url']
+        #         if photo_url == False:
+        #             session['photo_url'] = """assets/compiled/jpg/1.jpg"""
+        #         else:
+        #             hris = "http://hris.teamglac.com/"
+        #             session['photo_url'] = hris + user_data['photo_url']
 
-                print(session['username'])
+        #         print(session['username'])
                 return redirect(url_for('index', success=True))
 
     else:
@@ -209,9 +231,7 @@ def index():
     count_machines = program_manager.count_total_machine()
     count_machines_running = program_manager.count_total_machine_running()
     count_machines_stopped = program_manager.count_total_machine_stopped()
-    success = request.args.get('success')
-    username = session.get('username')
-    return render_template('layout-vertical-navbar.html', username=username, success=success, count_machines=count_machines,
+    return render_template('layout-vertical-navbar.html', count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
 
 @app.route('/process', methods=['POST'])
@@ -231,40 +251,43 @@ def process():
 @app.route('/machines')
 def get_machines():
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM machine_tbl")
+    cursor.execute("SELECT MIN(id) AS id, name FROM machine_tbl GROUP BY name;")
     rows = cursor.fetchall()
     machines = []
     for row in rows:
         machines.append({
             'id': row[0],
-            'path': row[1],
-            'name': row[2],
-            'status': row[3],
-            'date_start': row[4],
-            'date_stop': row[5],
+            'name': row[1]
         })
     cursor.close()
     return jsonify({'data': machines})
 
 
-@app.route('/machines_child', methods=['POST'])
-def machines_child():
-    child_id = request.form['id']
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM machine_tbl WHERE id = %s",[child_id])
-    rows = cursor.fetchall()
-    machines = []
-    for row in rows:
-        machines.append({
-            'id': row[0],
-            'path': row[1],
-            'name': row[2],
-            'status': row[3],
-            'date_start': row[4],
-            'date_stop': row[5],
-        })
+@app.route('/get_name', methods=['POST'])
+def get_name():
+    item_id = int(request.form['id']) # Retrieve ID from the request form data
+
+    # Perform a database query to fetch the item name based on the item ID
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor) 
+    cursor.execute("SELECT name FROM machine_tbl WHERE id = %s", (item_id,))
+    result = cursor.fetchone()
     cursor.close()
-    return jsonify({'data': machines})
+
+    # Check if result is not empty
+    if result:
+        item_name = result['name'] # Fetch the 'name' value from the result dictionary
+        print(item_name)
+        # Perform another database query using the item_name
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor) 
+        cursor.execute("SELECT * FROM machine_tbl WHERE name = %s", (item_name,))
+        result2 = cursor.fetchall()
+        print(result2)
+        cursor.close()
+
+        # Return the second query result as JSON response
+        return jsonify(result=result2)
+    else:
+        return jsonify(result=None)
 
 @app.route('/machines/update', methods=['POST'])
 def update_machine():
@@ -281,7 +304,7 @@ def update_machine():
 @app.route('/card_details')
 def get_card_details():
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM machine_tbl')
+    cursor.execute('SELECT * FROM date_time_capture')
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -290,11 +313,9 @@ def get_card_details():
     for row in card_data:
         card = {
             'id': row[0],
-            'path': row[1],
-            'name': row[2],
-            'status': row[3],
-            'date_start': str(row[4]),
-            'date_stop': str(row[5])
+            'current_path': row[1],
+            'status': row[2],
+            'date_time': row[3]
         }
         cards.append(card)
 
@@ -309,7 +330,7 @@ def addMachines():
         
         for value in machinesData:  
             # file_content = value.read()
-            cur.execute("INSERT INTO machine_tbl (name, path) VALUES (%s, %s)",[value.filename, controllersData])
+            cur.execute("INSERT INTO machine_tbl (path, name) VALUES (%s, %s)",([value.filename, controllersData]))
             conn.commit()       
             filename = os.path.basename(value.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -352,4 +373,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8083, debug=True)
+    socketio.run(app, port=8082, debug=True)
