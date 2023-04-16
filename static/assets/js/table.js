@@ -1,4 +1,3 @@
-
 $(document).ready(function () {
   // Define the DataTable
 
@@ -62,29 +61,25 @@ $(document).ready(function () {
           // Generate HTML for table rows
           var html = '';
           for (var i = 0; i < data.length; i++) {
-            var id = data[i][0]; // Accessing ID
-            var name = data[i][2]; // Accessing Name
-            var status = data[i][3]; // Accessing status
-            var date_start = data[i][4]; // Accessing date_start
-            var date_stop = data[i][5]; // Accessing date_stop
+            var name = data[i][0]; // Accessing Name
+            var status = data[i][1]; // Accessing status
+            var date_time = data[i][2]; // Accessing date
   
             var badgeClass = '';
-            if (status == 'running') {
+            if (status == 'IN PRODUCTION' || status == "STARTED") {
               badgeClass = 'badge bg-success"';
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
-            } else if (status == 'stopped') {
+            } else if (status == 'STOP DOWNTIME' || status == 'MACHINE DOWNTIME') {
               badgeClass = 'badge bg-danger';
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
             } else {
-              badgeClass = 'badge bg-secondary';
+              badgeClass = 'badge bg-primary';
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
             }
             html += '<tr>';
-            html += '<td>' + id + '</td>';
             html += '<td>' + name + '</td>';
             html += '<td>' + badge + '</td>';
-            html += '<td>' + date_start + '</td>';
-            html += '<td>' + date_stop + '</td>';
+            html += '<td>' + date_time + '</td>';
             html += '</tr>';
           }
   

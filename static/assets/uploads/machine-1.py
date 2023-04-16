@@ -41,12 +41,14 @@ while running:
 
         started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
         print(started)
-        current_path = os.path.abspath(__file__)
 
         # Get the filename without path
-        filename = os.path.basename(current_path)
-        query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
-        values = (title_idle,started)
+        filename = os.path.basename(__file__)
+        query = """INSERT INTO date_time_capture (current_path, status, date_time)
+                   VALUES (%s, %s, %s)
+                   ON CONFLICT (current_path) DO UPDATE
+                   SET current_path = EXCLUDED.current_path"""  # Specify the column to update
+        values = (filename,title_idle,started)
         cur.execute(query,values)
         conn.commit()
         sec = 0
@@ -87,7 +89,7 @@ while running:
                 print(started, '<-- IDLE')
                 title_idle = 'IDLE'
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()
@@ -107,7 +109,7 @@ while running:
                 started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
                 print(started)
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()
@@ -122,7 +124,7 @@ while running:
                 started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
                 print(started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()
@@ -136,7 +138,7 @@ while running:
                 started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
                 print(started)
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()
@@ -151,7 +153,7 @@ while running:
                 started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
                 print(started)
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()
@@ -166,7 +168,7 @@ while running:
                 started = time_stamp.strftime("%Y-%m-%d %H:%M:%S.%f")
                 print(started)
                 self.label_here.config(text = title_idle + ' AT: ' + ' '+ started)
-                query = "INSERT INTO date_time_capture (status,date_time) VALUES (%s, %s)"
+                query = f"UPDATE date_time_capture SET status = '{title_idle}', date_time = '{started}' WHERE current_path = '{filename}'"
                 values = (title_idle,started)
                 cur.execute(query,values)
                 conn.commit()

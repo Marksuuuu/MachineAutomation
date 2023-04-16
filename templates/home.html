@@ -75,7 +75,7 @@
                         <li class="sidebar-item ">
                             <a href="{{url_for('view_tables') }}" class='sidebar-link'>
                                 <i class="bi bi-table"></i>
-                                <span>All Machines Status</span>
+                                <span>All Controller Status</span>
                             </a>
                         </li>
 
@@ -84,7 +84,7 @@
                         <li class="sidebar-item ">
                             <a href="{{url_for('all_device') }}" class='sidebar-link'>
                                 <i class="bi bi-table"></i>
-                                <span>Devices</span>
+                                <span>Machines</span>
                             </a>
                         </li>
 
@@ -93,12 +93,12 @@
                         <li class="sidebar-item has-sub">
                             <a href="#" class="sidebar-link">
                                 <i class="bi bi-pentagon-fill"></i>
-                                <span>Widgets</span>
+                                <span>Options</span>
                             </a>
 
                             <ul class="submenu submenu-open" style="--submenu-height:129px;">
                                 <li class="submenu-item">
-                                    <a href="{{ url_for('logout') }}" class="submenu-link">Logout</a>
+                                    <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
                                 </li>
 
                                 <li class="submenu-item">
@@ -152,8 +152,7 @@
                                     <li>
                                         <h6 class="dropdown-header">Hello, {{ session['firstname']}}!</h6>
                                     </li>
-                                    <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-bezier me-2"></i>All
-                                            Controller Programs</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('view_programs') }}"><i class="icon-mid bi bi-bezier me-2"></i>All Programs Status</a></li>
                                     <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-gear me-2"></i>
                                             Settings</a></li>
                                     <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-wallet me-2"></i>

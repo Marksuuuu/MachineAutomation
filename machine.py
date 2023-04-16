@@ -9,7 +9,7 @@ import time
 import datetime
 import json
 import hashlib
-import requests
+import re
 import os
 
 app = Flask(__name__)
@@ -20,8 +20,12 @@ UPLOAD_FOLDER = 'static\\assets\\uploads'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-  
+
+global running_process
+running_process = None
+
 ALLOWED_EXTENSIONS = set(['py'])
+
 
 def allowed_file(filename):
     for extension in ALLOWED_EXTENSIONS:
@@ -29,6 +33,8 @@ def allowed_file(filename):
             return True
     else:
         return "<script>alert('Unsupported FIle type') </script>"
+
+
 # Database configuration
 db_host = 'localhost'
 db_port = 5432
@@ -48,6 +54,7 @@ conn = psycopg2.connect(
     password=db_password
 )
 cur = conn.cursor()
+
 
 class Program:
     def __init__(self, id, name, path):
@@ -69,6 +76,7 @@ class Program:
             subprocess.check_call(['python', self.path])
         except subprocess.CalledProcessError as e:
             print(f"Error running {self.name}: {e}")
+
 
 class ProgramManager:
     def __init__(self):
@@ -93,11 +101,6 @@ class ProgramManager:
             return True
         else:
             return False
-
-    def remove_program(self, id):
-        cur.execute('DELETE FROM machine_tbl WHERE id = %s', (id,))
-        conn.commit()
-        self.load_programs()
 
     def check_running_programs(self):
         for program in self.programs:
@@ -143,33 +146,11 @@ class ProgramManager:
         total_count = cursor.fetchall()
         return total_count
 
-
-        # Define an event handler for the "message" event
-    @socketio.on('message')
-    def handle_message(data):
-        # Handle the WebSocket message here
-        # You can access the data from the client through the 'data' parameter
-        # For example, you can emit a response back to the client using the 'emit' function
-        emit('response', {'message': 'Server response'})
-
-    # Define an event handler for the "connect" event
-    @socketio.on('connect')
-    def handle_connect():
-        # Handle the WebSocket connect event
-        # You can perform any necessary actions when a client connects to the WebSocket
-        print('Client connected')
-
-    # Define an event handler for the "disconnect" event
-    @socketio.on('disconnect')
-    def handle_disconnect():
-        # Handle the WebSocket disconnect event
-        # You can perform any necessary actions when a client disconnects from the WebSocket
-        print('Client disconnected')
-
     def run(self):
         while True:
             self.load_programs()
             self.check_running_programs()
+
 
 program_manager = ProgramManager()
 
@@ -216,23 +197,12 @@ def login():
         #             session['photo_url'] = hris + user_data['photo_url']
 
         #         print(session['username'])
-                return redirect(url_for('index', success=True))
+        return redirect(url_for('index', success=True))
 
     else:
         # Display the login form
         return render_template('auth-login.html')
 
-# Define the route for the index page
-
-@app.route('/index', methods=['GET'])
-def index():
-    # Get the success parameter from the URL
-    program_manager = ProgramManager()
-    count_machines = program_manager.count_total_machine()
-    count_machines_running = program_manager.count_total_machine_running()
-    count_machines_stopped = program_manager.count_total_machine_stopped()
-    return render_template('layout-vertical-navbar.html', count_machines=count_machines,
-                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -248,10 +218,12 @@ def process():
     msg = 'success'
     return jsonify({'name': msg})
 
+
 @app.route('/machines')
 def get_machines():
     cursor = conn.cursor()
-    cursor.execute("SELECT MIN(id) AS id, name FROM machine_tbl GROUP BY name;")
+    cursor.execute(
+        "SELECT MIN(id) AS id, name FROM machine_tbl GROUP BY name;")
     rows = cursor.fetchall()
     machines = []
     for row in rows:
@@ -263,23 +235,117 @@ def get_machines():
     return jsonify({'data': machines})
 
 
+@app.route('/programs')
+def get_programs():
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM machine_tbl;")
+    rows = cursor.fetchall()
+    programs = []
+    for data in rows:
+        program = {
+            'id': data[0],
+            'path': data[2],
+            'status': data[3],
+            'date_start': data[4],
+            'date_stop': data[5]
+        }
+        programs.append(program)
+        print(data)
+    cursor.close()
+    return jsonify({'data': programs})
+
+
+@app.route('/execute', methods=['POST'])
+def execute_program():
+    global running_process  # Access the global running_process variable
+    if running_process and running_process.poll() is None:
+        # If there is a running process, and it has not terminated yet,
+        # send a response indicating that a program is already running
+        return jsonify(msg="A program is already running. Please stop it first.")
+    else:
+        id = int(request.form['id'])  # Retrieve ID from the request form data
+
+        # Perform a database query to fetch the name based on the ID
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("SELECT path FROM machine_tbl WHERE id = %s", (id,))
+        fetchedData = cursor.fetchone()
+        print(fetchedData)
+        cursor.close()
+
+        # Check if result is not empty
+        if fetchedData:
+            # Fetch the 'name' value from the result dictionary
+            item_path = fetchedData['path']
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # Change the current working directory of the Python script to the script directory
+            program_path = f"cd {script_dir}'\\static\\assets\\uploads' && python {item_path}"
+            command = re.sub(r"'", "", program_path)
+
+            # Build the command to execute
+            print(command)
+            # Perform another database query using the item_path
+            running_process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = running_process.communicate()
+            
+            print("Output:")
+            print(stdout.decode('utf-8'))
+            print("Error:")
+            print(stderr.decode('utf-8'))
+            
+            if running_process.returncode == 0:
+                msg = "Program executed successfully."
+                print("Program executed successfully.")
+            else:
+                msg = "Program executed successfully."
+                print(f"Program execution failed with return code {running_process.returncode}.")
+
+            # Return the second query result as JSON response
+            return jsonify(msg=msg)
+        else:
+            return jsonify(result=None)
+
+@app.route('/stop_execute', methods=['POST'])
+def stop_execute_program():
+    global running_process
+
+    # Check if there is a running process
+    if running_process:
+        try:
+            # Terminate the running process
+            running_process.terminate()
+            running_process = None  # Reset the global variable
+            return jsonify(msg="Program execution stopped successfully.")
+        except Exception as e:
+            return jsonify(msg=f"Failed to stop program execution: {str(e)}"), 500
+    else:
+        # If no running process, return an response
+        return jsonify(msg="No program is currently running."), 400
+
+
 @app.route('/get_name', methods=['POST'])
 def get_name():
-    item_id = int(request.form['id']) # Retrieve ID from the request form data
+    item_id = int(request.form['id'])  # Retrieve ID from the request form data
 
     # Perform a database query to fetch the item name based on the item ID
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor) 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT name FROM machine_tbl WHERE id = %s", (item_id,))
     result = cursor.fetchone()
     cursor.close()
 
     # Check if result is not empty
     if result:
-        item_name = result['name'] # Fetch the 'name' value from the result dictionary
+        # Fetch the 'name' value from the result dictionary
+        item_name = result['name']
         print(item_name)
         # Perform another database query using the item_name
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor) 
-        cursor.execute("SELECT * FROM machine_tbl WHERE name = %s", (item_name,))
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""SELECT a.path,b.status,b.date_time
+                       FROM 
+                       machine_tbl a,
+                       date_time_capture b
+                       WHERE a.path = b.current_path
+                       AND a.name = %s""", (item_name,))
         result2 = cursor.fetchall()
         print(result2)
         cursor.close()
@@ -288,6 +354,7 @@ def get_name():
         return jsonify(result=result2)
     else:
         return jsonify(result=None)
+
 
 @app.route('/machines/update', methods=['POST'])
 def update_machine():
@@ -300,6 +367,7 @@ def update_machine():
     conn.commit()
     cursor.close()
     return jsonify({'success': True})
+
 
 @app.route('/card_details')
 def get_card_details():
@@ -321,17 +389,19 @@ def get_card_details():
 
     return jsonify(cards)
 
-@app.route("/addMachines",methods=["POST","GET"])
+
+@app.route("/addMachines", methods=["POST", "GET"])
 def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         machinesData = request.files.getlist('addMachine[]')
         controllersData = request.form['controllerInput']
-        
-        for value in machinesData:  
+
+        for value in machinesData:
             # file_content = value.read()
-            cur.execute("INSERT INTO machine_tbl (path, name) VALUES (%s, %s)",([value.filename, controllersData]))
-            conn.commit()       
+            cur.execute("INSERT INTO machine_tbl (path, name) VALUES (%s, %s)", ([
+                        value.filename, controllersData]))
+            conn.commit()
             filename = os.path.basename(value.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             # Remove old file with the same name if it exists
@@ -345,12 +415,6 @@ def addMachines():
         msg = 'Invalid request method'
     return jsonify(msg)
 
-@app.route('/data_table')
-def view_tables():
-    program_manager = ProgramManager()
-    view_all_machine_and_status = program_manager.view_table_func()
-    return render_template('table-datatable-jquery.html', view_all_machine_and_status=view_all_machine_and_status)
-
 @app.route('/machines/delete', methods=['POST'])
 def delete_machine():
     cursor = conn.cursor()
@@ -360,10 +424,38 @@ def delete_machine():
     cursor.close()
     return jsonify({'success': True})
 
+## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
+
+
+@app.route('/index', methods=['GET'])
+def index():
+    print('Go to Index')
+    program_manager = ProgramManager()
+    count_machines = program_manager.count_total_machine()
+    count_machines_running = program_manager.count_total_machine_running()
+    count_machines_stopped = program_manager.count_total_machine_stopped()
+    return render_template('home.html', count_machines=count_machines,
+                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
+
+
+@app.route('/data_table')
+def view_tables():
+    program_manager = ProgramManager()
+    view_all_machine_and_status = program_manager.view_table_func()
+    return render_template('controller-status.html', view_all_machine_and_status=view_all_machine_and_status)
+
+
+@app.route('/controller_program')
+def view_programs():
+    print('Go to controller program')
+    return render_template('controllers-program.html')
+
+
 @app.route('/all_device')
 def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
+
 
 @app.route('/logout')
 def logout():
