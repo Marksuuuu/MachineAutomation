@@ -18,17 +18,6 @@
   <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/datatables.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/@icon/dripicons/dripicons.css') }}">
-
-  <style>
-    td.details-control {
-      background: url('../static/assets/images/icon/details_open.png') no-repeat center center;
-      cursor: pointer;
-    }
-
-    tr.details td.details-control {
-      background: url('../static/assets/images/icon/details_close.png') no-repeat center center;
-    }
-  </style>
 </head>
 
 <body>
@@ -164,15 +153,12 @@
           
           </div>
           <div class="card-body">
-            <table class="table" id="programs-table">
+            <table class="table" id="category-tbl-id">
               <thead>
                 <tr>
                   <th>ID</th>  
-                  <th>Program Name</th>
-                  <th>Status</th>
-                  <th>Date Start</th>
-                  <th>Date Stop</th>
-                  <th>Action</th>
+                  <th>Cateory</th>
+                  <th>UPH</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -191,7 +177,7 @@
   <script src="{{url_for('static', filename='assets/extensions/jquery/jquery.min.js') }}"></script>
   <script src="https://cdn.datatables.net/v/bs5/dt-1.12.1/datatables.min.js"></script>
   <script src="{{url_for('static', filename='assets/js/pages/datatables.js') }}"></script>
-  <script src="{{url_for('static', filename='assets/js/programs.js') }}"></script>
+  <script src="{{url_for('static', filename='assets/js/category-tbl.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Add the following script tags to your HTML templates -->
 <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>

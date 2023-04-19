@@ -18,17 +18,6 @@
   <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/datatables.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/@icon/dripicons/dripicons.css') }}">
-
-  <style>
-    td.details-control {
-      background: url('../static/assets/images/icon/details_open.png') no-repeat center center;
-      cursor: pointer;
-    }
-
-    tr.details td.details-control {
-      background: url('../static/assets/images/icon/details_close.png') no-repeat center center;
-    }
-  </style>
 </head>
 
 <body>
@@ -38,7 +27,7 @@
         <div class="sidebar-header position-relative">
           <div class="d-flex justify-content-between align-items-center">
             <div class="logo">
-              <a href="index.html">Kung ano ano lang</a>
+              <a href="index.html">Machine Metric System</a>
             </div>
             <div class="theme-toggle d-flex gap-2  align-items-center mt-2">
               <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
@@ -74,37 +63,59 @@
           </div>
         </div>
         <div class="sidebar-menu">
-          <ul class="menu">
-            <li class="sidebar-title">Menu</li>
+                    <ul class="menu">
+                        <li class="sidebar-title">Menu</li>
 
-            <li class="sidebar-item active ">
-              <a href="{{url_for('index') }}" class='sidebar-link'>
-                <i class="bi bi-grid-fill"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
+                        <li class="sidebar-item active ">
+                            <a href="{{url_for('index') }}" class="sidebar-link">
+                                <i class="bi bi-grid-fill"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
 
-            <li class="sidebar-title">Operations Devices</li>
+                        <li class="sidebar-title">Forms &amp; Tables</li>
 
-            <li class="sidebar-item ">
-              <a href="{{url_for('all_device') }}" class='sidebar-link'>
-                <i class="bi bi-table"></i>
-                <span>Machines</span>
-              </a>
-            </li>
+                        <li class="sidebar-item ">
+                            <a href="{{url_for('view_tables') }}" class='sidebar-link'>
+                                <i class="bi bi-table"></i>
+                                <span>All Controller Status</span>
+                            </a>
+                        </li>
 
-            <!-- <li class="sidebar-title">Tables</li> -->
+                        <li class="sidebar-title">Operations Devices</li>
 
-            <!-- <li
-                class="sidebar-item  ">
-                <a href="{{url_for('view_tables') }}" class='sidebar-link'>
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>View Status</span>
-                </a>
-            </li> -->
+                        <li class="sidebar-item ">
+                            <a href="{{url_for('all_device') }}" class='sidebar-link'>
+                                <i class="bi bi-table"></i>
+                                <span>Machines</span>
+                            </a>
+                        </li>
 
-          </ul>
-        </div>
+                        <li class="sidebar-title">Menus</li>
+
+                        <li class="sidebar-item has-sub">
+                            <a href="#" class="sidebar-link">
+                                <i class="bi bi-pentagon-fill"></i>
+                                <span>Options</span>
+                            </a>
+
+                            <ul class="submenu submenu-open" style="--submenu-height:129px;">
+                                <li class="submenu-item">
+                                    <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
+                                </li>
+
+                                <li class="submenu-item">
+                                    <a href="ui-widgets-pricing.html" class="submenu-link">Pricing</a>
+                                </li>
+
+                                <li class="submenu-item">
+                                    <a href="ui-widgets-todolist.html" class="submenu-link">To-do List</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </div>
       </div>
     </div>
   </div>
@@ -256,11 +267,6 @@
               </div>
             </div>
           </div>
-          <!-- end -->
-
-          <!-- for edit -->
-
-          <!-- end -->
 
           <div class="card-body">
             <table class="table" id="machine-table">

@@ -13,7 +13,7 @@ $(document).ready(function () {
                 render: function (data, type, row) {
                     // Check the value of 'status' and return a badge with appropriate color
                     if (data === 'running') {
-                        return '<span class="badge bg-success">' + data + '</span>';
+                        return '<span class="badge bg-success status'+row.id+'">' + data + '</span>';
                     } else if (data === 'stopped') {
                         return '<span class="badge bg-danger">' + data + '</span>';
                     } else {
@@ -43,6 +43,9 @@ $(document).ready(function () {
     $('#programs-table').on('click', '.stop-btn', function(){
         var id = $(this).attr('data-id'); // Get the ID value from the element attribute
         console.log('stop',id)
+        $(this).hide()
+        $(this).closest('tr').find('td:eq(2)').html('<span class="badge bg-danger">stopped</span>')
+        $(this).closest('td').append('<button type="button" class="btn btn-success rounded-pill icon icon icon dripicons dripicons-media-play start-btn" data-id="' +id + '"></button>')
         $.ajax({
             url: '/stop_execute',
             type: 'POST',
@@ -56,7 +59,9 @@ $(document).ready(function () {
     });
     $('#programs-table').on('click', '.start-btn', function(){
         var id = $(this).attr('data-id'); // Get the ID value from the element attribute
-      
+        $(this).hide()
+        $(this).closest('tr').find('td:eq(2)').html('<span class="badge bg-success">running</span>')
+        $(this).closest('td').append('<button type="button" class="btn btn-danger rounded-pill icon icon icon dripicons dripicons-media-stop stop-btn" data-id="' +id + '"></button>')
         // AJAX call to get data
         $.ajax({
           url: '/execute',

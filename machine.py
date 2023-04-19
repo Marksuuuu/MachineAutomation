@@ -9,6 +9,7 @@ import time
 import datetime
 import json
 import hashlib
+import requests
 import re
 import os
 
@@ -164,39 +165,39 @@ t.start()
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # form_username = request.form['username']
-        # form_password = request.form['password']
+        form_username = request.form['username']
+        form_password = request.form['password']
 
-        # if form_username == '' and form_password == '':
-        #     return """<script>
-        #                     alert('Error')
-        #                     </script>"""
-        # else:
+        if form_username == '' and form_password == '':
+            return """<script>
+                            alert('Error')
+                            </script>"""
+        else:
 
-        #     url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
-        #     response = requests.get(url).json()
+            url = f"http://hris.teamglac.com/api/users/login?u={form_username}&p={form_password}"
+            response = requests.get(url).json()
 
-        #     if response['result'] == False:
-        #         return """<script>
-        #                     alert('Error')
-        #                     </script>"""
-        #     else:
-        #         user_data = response["result"]
-        #         session['firstname'] = user_data['firstname']
-        #         session['lastname'] = user_data['lastname']
-        #         session['username'] = user_data['username']
-        #         session['fullname'] = user_data['fullname']
-        #         session['employee_position'] = user_data['employee_position']
+            if response['result'] == False:
+                return """<script>
+                            alert('Error')
+                            </script>"""
+            else:
+                user_data = response["result"]
+                session['firstname'] = user_data['firstname']
+                session['lastname'] = user_data['lastname']
+                session['username'] = user_data['username']
+                session['fullname'] = user_data['fullname']
+                session['employee_position'] = user_data['employee_position']
 
-        #         photo_url = session['photo_url'] = user_data['photo_url']
+                photo_url = session['photo_url'] = user_data['photo_url']
 
-        #         if photo_url == False:
-        #             session['photo_url'] = """assets/compiled/jpg/1.jpg"""
-        #         else:
-        #             hris = "http://hris.teamglac.com/"
-        #             session['photo_url'] = hris + user_data['photo_url']
+                if photo_url == False:
+                    session['photo_url'] = """assets/compiled/jpg/1.jpg"""
+                else:
+                    hris = "http://hris.teamglac.com/"
+                    session['photo_url'] = hris + user_data['photo_url']
 
-        #         print(session['username'])
+                print(session['username'])
         return redirect(url_for('index', success=True))
 
     else:
@@ -233,6 +234,21 @@ def get_machines():
         })
     cursor.close()
     return jsonify({'data': machines})
+
+@app.route('/category')
+def get_category():
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM category_uph_tbl;")
+    rows = cursor.fetchall()
+    category_data = []
+    for row in rows:
+        category_data.append({
+            'id': row[0],
+            'category': row[1],
+            'uph': row[2]
+        })
+    cursor.close()
+    return jsonify({'data': category_data})
 
 
 @app.route('/programs')
@@ -274,7 +290,7 @@ def execute_program():
 
         # Check if result is not empty
         if fetchedData:
-            # Fetch the 'name' value from the result dictionary
+            # Fetch the 'path' value from the result dictionary
             item_path = fetchedData['path']
             script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -340,7 +356,7 @@ def get_name():
         print(item_name)
         # Perform another database query using the item_name
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("""SELECT a.path,b.status,b.date_time
+        cursor.execute("""SELECT a.path,b.*
                        FROM 
                        machine_tbl a,
                        date_time_capture b
@@ -372,7 +388,19 @@ def update_machine():
 @app.route('/card_details')
 def get_card_details():
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM date_time_capture')
+    cursor.execute("""
+                   SELECT
+                   id,
+                   current_path,
+                   status,
+                   to_char(start_time, 'Month dd,YYYY hh24:mi:ss') as start_time,
+                   to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
+                   to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
+                   to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
+                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time
+                   FROM date_time_capture
+                   ORDER BY id ASC
+                   """)
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -383,7 +411,11 @@ def get_card_details():
             'id': row[0],
             'current_path': row[1],
             'status': row[2],
-            'date_time': row[3]
+            'start_time': row[3],
+            'end_time': row[4],
+            'pause_time': row[5],
+            'resume_time': row[6],
+            'idle_time': row[7]
         }
         cards.append(card)
 
@@ -424,6 +456,7 @@ def delete_machine():
     cursor.close()
     return jsonify({'success': True})
 
+
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
 
@@ -436,7 +469,6 @@ def index():
     count_machines_stopped = program_manager.count_total_machine_stopped()
     return render_template('home.html', count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
-
 
 @app.route('/data_table')
 def view_tables():
@@ -456,6 +488,10 @@ def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
 
+@app.route('/machine_uph')
+def machine_uph():
+    print('Go to machine uph')
+    return render_template('machine_uph.html')
 
 @app.route('/logout')
 def logout():
@@ -465,4 +501,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    socketio.run(app, port=8082, debug=True)
+    app.run(host="localhost", port=8083, debug=True)
