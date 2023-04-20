@@ -62,8 +62,10 @@ $(document).ready(function () {
           var html = '';
           for (var i = 0; i < data.length; i++) {
             var name = data[i][0]; // Accessing Name
-            var status = data[i][1]; // Accessing status
-            var date_time = data[i][2]; // Accessing date
+            var status = data[i][3]; // Accessing status
+            var start_time = data[i][4]; // Accessing date
+            var end_time = data[i][5]; // Accessing date
+  
   
             var badgeClass = '';
             if (status == 'IN PRODUCTION' || status == "STARTED") {
@@ -79,7 +81,8 @@ $(document).ready(function () {
             html += '<tr>';
             html += '<td>' + name + '</td>';
             html += '<td>' + badge + '</td>';
-            html += '<td>' + date_time + '</td>';
+            html += '<td>' + start_time + '</td>';
+            html += '<td>' + end_time + '</td>';
             html += '</tr>';
           }
   

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertical Navbar - Mazer Admin Dashboard</title>
+    <title>Machine Metric System - Home</title>
 
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='assets/css/main/app.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/main/app-dark.css') }}">
@@ -106,7 +106,9 @@
                                 </li>
 
                                 <li class="submenu-item">
-                                    <a href="ui-widgets-todolist.html" class="submenu-link">To-do List</a>
+                                    <a href="{{ url_for('captured_time') }}" class="submenu-link">Captured Dates</a>
+
+                                    
                                 </li>
                             </ul>
                         </li>
@@ -173,11 +175,74 @@
                 <div class="page-heading">
                     <div class="page-title">
                         <div class="row">
-                            <div class="col-12 col-md-6 order-md-1 order-last">
-                                <h3>Vertical Layout with Navbar</h3>
-                                <p class="text-subtitle text-muted">Navbar will appear on the top of the page.</p>
+                            <div class="col-3 col-md-4 order-md-1 order-last">
+                                <div class="card">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div
+                                                class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start ">
+                                                <div class="stats-icon purple mb-2">
+                                                    <lord-icon src="https://cdn.lordicon.com/oegrrprk.json"
+                                                        trigger="loop" delay="1500" style="width:250px;height:250px">
+                                                    </lord-icon>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Total of Controllers</h6>
+                                                {% for count in count_machines %}
+                                                <h6 class="font-extrabold mb-0">{{ count }}</h6>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3 col-md-4 order-md-1">
+                                <div class="card">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div
+                                                class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start ">
+                                                <div class="stats-icon blue mb-2">
+                                                    <lord-icon src="https://cdn.lordicon.com/okyfhqcr.json"
+                                                        trigger="loop" delay="1500" style="width:250px;height:250px">
+                                                    </lord-icon>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Machine Running</h6>
+                                                {% for count in count_machines_running %}
+                                                <h6 class="font-extrabold mb-0">{{ count }}</h6>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3 col-md-4 order-md-1 order-last">
+                                <div class="card">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div
+                                                class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start ">
+                                                <div class="stats-icon red mb-2">
+                                                    <lord-icon src="https://cdn.lordicon.com/inrunzby.json"
+                                                        trigger="loop" delay="1500" style="width:250px;height:250px">
+                                                    </lord-icon>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Machine Stopped</h6>
+                                                {% for count in count_machines_stopped%}
+                                                <h6 class="font-extrabold mb-0">{{ count }}</h6>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        
                     </div>
                     <section class="section">
                         <div class="card">
@@ -185,6 +250,7 @@
                                 <h4 class="card-title">Example Content</h4>
                             </div>
                             <div class="card-body">
+                                
                             </div>
                         </div>
                     </section>
@@ -208,3 +274,4 @@
 </body>
 
 </html>
+

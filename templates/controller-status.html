@@ -100,18 +100,20 @@
                             </a>
 
                             <ul class="submenu submenu-open" style="--submenu-height:129px;">
-                                <li class="submenu-item">
-                                    <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
-                                </li>
+                              <li class="submenu-item">
+                                  <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
+                              </li>
 
-                                <li class="submenu-item">
-                                    <a href="ui-widgets-pricing.html" class="submenu-link">Pricing</a>
-                                </li>
+                              <li class="submenu-item">
+                                  <a href="{{ url_for('machine_uph') }}" class="submenu-link">Machine Uph</a>
+                              </li>
 
-                                <li class="submenu-item">
-                                    <a href="ui-widgets-todolist.html" class="submenu-link">To-do List</a>
-                                </li>
-                            </ul>
+                              <li class="submenu-item">
+                                  <a href="{{ url_for('captured_time') }}" class="submenu-link">Captured Dates</a>
+
+                                  
+                              </li>
+                          </ul>
                         </li>
 
                     </ul>
@@ -202,8 +204,8 @@
                 </div>
               </div>
 
-              <div class="modal fade" id="myModal">
-                <div class="modal-dialog modal-dialog-scrollable">
+              <div class="modal fade modal-lg" id="myModal">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">Machines</h5>
@@ -215,9 +217,10 @@
                       <table class="table">
                         <thead>
                           <tr>
-                            <th class='col-5'>Machine name</th>
-                            <th class='col-2'>Status</th>
-                            <th class='col-6'>Date</th>
+                            <th>Machine name</th>
+                            <th>Status</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
                           </tr>
                         </thead>
                         <tbody id="modal-data"></tbody> <!-- Element to display data from AJAX call -->

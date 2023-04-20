@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    var timerInterval;
+
     function fetchAndCreateCards() {
         $.ajax({
             url: '/card_details',
@@ -26,6 +26,7 @@ $(document).ready(function () {
 
                     // Create a unique ID for the timer based on the item ID
                     var timerID = 'timer-' + item.id;
+                    var machine_id = item.id
                     var date_here = item.end_time;
 
                     body += '<div class="col-lg-4"><div class="card card-margin ' + stat + '">'
@@ -60,13 +61,17 @@ $(document).ready(function () {
                     $('.device_row').append(body);
 
                     // Start the timer if the status is 'STARTED'
-                    if (machine_status == 'IDLE') {
-                        startTimer(timerID, item.end_time, date_here);
-                    }
-                    else if(machine_status == 'STOP'){
-                        pauseTimer();
-                    }else{
+                    if (machine_status == 'STOP')
+                        startTimer(timerID, date_here, machine_id);
+                    pauseTimer(timerID, machine_id);
 
+                    if (machine_status == 'IDLE') {
+
+                    }
+                    else if (machine_status == 'STOP') {
+
+                    } else if (machine_status == 'PAUSE') {
+                        pauseTimer(timerID, machine_id);
                     }
                 });
             },
@@ -77,16 +82,21 @@ $(document).ready(function () {
     }
 
     fetchAndCreateCards();
-    function startTimer(timerID, startTime, date_here) {
+    var timerInterval;
+    function startTimer(timerID, date_here, machine_id) {
         var timerElement = $('#' + timerID);
+        var machineID = machine_id
+        var percentage = 0;
+        var seconds = 0;
         // var startTime = /*$('#endDate').val();*/ '2023-04-19 12:30:21'
-        
+
         var endDate = new Date(date_here);
         console.log(endDate)
         var dateObject = new Date(endDate);
         var countDownDate = new Date(dateObject).getTime();
         var timerInterval = setInterval(function () {
             var now = new Date().getTime();
+        
 
             // Find the distance between now and the count down date
             var distance = countDownDate - now;
@@ -94,29 +104,30 @@ $(document).ready(function () {
             var days = Math.floor(distance / (1000 * 60 * 60 * 24));
             var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            seconds = Math.floor((distance % (1000 * 60)) / 1000);
             timerElement.find('.radial-timer-seconds').text(pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2));
-            var percentage = distance * 100 / 3600; // calculate the percentage of elapsed time
+            percentage = distance * 100 / 3600; // calculate the percentage of elapsed time
             timerElement.siblings('.radial-timer-bar').css('transform', 'rotate(' + percentage + 'deg)'); // update the radial-timer-bar
             timerElement.html(pad(pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2)))
             console.log(pad(pad(hours, 2) + ':' + pad(minutes, 2) + ':' + pad(seconds, 2)))
         }, 1000);
-        console.log(timerInterval)
+        console.log('machine ID', seconds)
     }
+
+
     function pauseTimer(timerID) {
         clearInterval(timerInterval);
-  
+
         // get the elapsed time
         var timerElement = $('#' + timerID);
         var timerValue = timerElement.text();
         var elapsedSeconds = (parseInt(timerValue.slice(0, 2)) * 60 * 60) + (parseInt(timerValue.slice(3, 5)) * 60) + parseInt(timerValue.slice(6, 8));
         var elapsedTime = elapsedSeconds * 1000;
-  
+
         // update the database with the paused time and elapsed time
         var pauseTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
         // CODE TO SAVE PAUSE TIME AND ELAPSED TIME TO DATABASE
-        console.log('pause',timerInterval)
-  
+
     }
     function pad(num, size) {
         var s = "" + num;
@@ -153,28 +164,7 @@ $(document).ready(function () {
 // function pauseTimer(timerID) {
 //     clearInterval(timerInterval);
 
-//     // get the elapsed time
-//     var timerElement = $('#' + timerID);
-//     var timerValue = timerElement.text();
-//     var elapsedSeconds = (parseInt(timerValue.slice(0, 2)) * 60 * 60) + (parseInt(timerValue.slice(3, 5)) * 60) + parseInt(timerValue.slice(6, 8));
-//     var elapsedTime = elapsedSeconds * 1000;
 
-//     // update the database with the paused time and elapsed time
-//     var pauseTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
-//     // send AJAX request to Flask server to save data
-//     $.ajax({
-//         type: 'POST',
-//         url: '/save_pause',
-//         data: JSON.stringify({ 'timerID': timerID, 'pauseTime': pauseTime, 'elapsedTime': elapsedTime }),
-//         contentType: 'application/json',
-//         success: function (response) {
-//             console.log(response);
-//         },
-//         error: function (error) {
-//             console.log(error);
-//         }
-//     });
 // }
 
 

@@ -1,12 +1,13 @@
 import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
 from flask_socketio import SocketIO, emit
+from datetime import datetime
 import psycopg2
 import psycopg2.extras
 import psutil
 import subprocess
 import time
-import datetime
+# import datetime
 import json
 import hashlib
 import requests
@@ -107,14 +108,14 @@ class ProgramManager:
         for program in self.programs:
             if program.is_running():
                 status = 'running'
-                date_start = datetime.datetime.now()
+                date_start = datetime.now()
                 cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s',
                             (status, date_start, program.id))
                 conn.commit()
 
             else:
                 status = 'stopped'
-                date_stop = datetime.datetime.now()
+                date_stop = datetime.now()
                 cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s',
                             (status, date_stop, program.id))
                 conn.commit()
@@ -122,7 +123,7 @@ class ProgramManager:
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
-            'SELECT count(name) as total_machines FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name)')
+            'SELECT count(name) as total_machines FROM machine_tbl WHERE name IN (SELECT MAX(name) FROM machine_tbl GROUP BY name)')
         total_count = cursor.fetchone()
         return total_count
 
@@ -161,6 +162,7 @@ t = threading.Thread(target=program_manager.run)
 t.start()
 
 # Define the route for the login page
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -235,6 +237,7 @@ def get_machines():
     cursor.close()
     return jsonify({'data': machines})
 
+
 @app.route('/category')
 def get_category():
     cursor = conn.cursor()
@@ -301,25 +304,28 @@ def execute_program():
             # Build the command to execute
             print(command)
             # Perform another database query using the item_path
-            running_process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            running_process = subprocess.Popen(
+                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = running_process.communicate()
-            
+
             print("Output:")
             print(stdout.decode('utf-8'))
             print("Error:")
             print(stderr.decode('utf-8'))
-            
+
             if running_process.returncode == 0:
                 msg = "Program executed successfully."
                 print("Program executed successfully.")
             else:
                 msg = "Program executed successfully."
-                print(f"Program execution failed with return code {running_process.returncode}.")
+                print(
+                    f"Program execution failed with return code {running_process.returncode}.")
 
             # Return the second query result as JSON response
             return jsonify(msg=msg)
         else:
             return jsonify(result=None)
+
 
 @app.route('/stop_execute', methods=['POST'])
 def stop_execute_program():
@@ -372,22 +378,77 @@ def get_name():
         return jsonify(result=None)
 
 
-@app.route('/machines/update', methods=['POST'])
-def update_machine():
-    cursor = conn.cursor()
-    id = request.form['id']
-    name = request.form['edit_machine_name']
-    path = request.form['edit_program_path']
+@app.route('/save_pause', methods=['POST'])
+def save_pause():
+    data = json.loads(request.data)
+    pauseTime = data['pauseTime']
+    machineId = data['machineId']
+    print('machine ID ', machineId)
+    # establish connection to database
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    # insert data into database
     cursor.execute(
-        "UPDATE machine_tbl SET name = %s, path = %s WHERE id = %s", (name, path, id))
+        "INSERT INTO captured_dates (machine_id, pause_time) VALUES (%s, %s)", (machineId, pauseTime))
+    # close connection to database
     conn.commit()
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+
+@app.route('/card_details_table')
+def card_details_table():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                   SELECT
+                   id,
+                   current_path,
+                   status,
+                   to_char(start_time, 'Month dd,YYYY hh24:mi:ss') as start_time,
+                   to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
+                   to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
+                   to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
+                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time
+                   FROM date_time_capture
+                   ORDER BY id ASC
+                    """)
+    dataResult = cursor.fetchall()
+    capturedDatas = []
+    for data in dataResult:
+        capturedData = {
+            'id': data[0],
+            'current_path': data[1],
+            'status': data[2],
+            'start_time': data[3],
+            'idle_time': data[7],
+            'pause_time': data[5],
+            'resume_time': data[6],
+            'end_time': data[4]
+        }
+        capturedDatas.append(capturedData)
     cursor.close()
-    return jsonify({'success': True})
+    return jsonify({'data': capturedDatas})
+
+
+@app.route('/insert_data', methods=['POST'])
+def insert_data():
+    data = request.get_json()
+    data_id = data['id']
+    dateEnd = str(data['dateEnd'])
+    end_date_fixed = datetime.strptime(dateEnd, '%Y-%m-%dT%H:%M')
+    end_date_string = end_date_fixed.strftime('%Y-%m-%d %H:%M:%S')
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute(f"""UPDATE date_time_capture
+	SET end_time= '{dateEnd}'
+	WHERE id = {data_id};""")
+    conn.commit()
+    response = {'status': 'success'}
+    return jsonify(response)
 
 
 @app.route('/card_details')
 def get_card_details():
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                    SELECT
                    id,
@@ -447,6 +508,7 @@ def addMachines():
         msg = 'Invalid request method'
     return jsonify(msg)
 
+
 @app.route('/machines/delete', methods=['POST'])
 def delete_machine():
     cursor = conn.cursor()
@@ -470,6 +532,7 @@ def index():
     return render_template('home.html', count_machines=count_machines,
                            count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
 
+
 @app.route('/data_table')
 def view_tables():
     program_manager = ProgramManager()
@@ -488,10 +551,18 @@ def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
 
+
 @app.route('/machine_uph')
 def machine_uph():
     print('Go to machine uph')
     return render_template('machine_uph.html')
+
+
+@app.route('/captured_time')
+def captured_time():
+    print('Go to machine uph')
+    return render_template('captured_time.html')
+
 
 @app.route('/logout')
 def logout():
