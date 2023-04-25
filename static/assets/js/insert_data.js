@@ -28,6 +28,7 @@ $(document).ready(function () {
         var form = $('#add-machine')[0];
         var formData = new FormData(form);
         formData.append('controllerInput', formData.get('controllerInput'));
+        formData.append('controllerIp', formData.get('controllerIp'));
         $.ajax({
             url: "/addMachines",
             method: "POST",

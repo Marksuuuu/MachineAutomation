@@ -13,11 +13,16 @@ import hashlib
 import requests
 import re
 import os
+import paramiko
+import ipaddress
+
+
+
 
 app = Flask(__name__)
 app.secret_key = 'mark'
 socketio = SocketIO(app)
-UPLOAD_FOLDER = 'static\\assets\\uploads'
+UPLOAD_FOLDER = 'uploads'
 
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -26,7 +31,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 global running_process
 running_process = None
 
-ALLOWED_EXTENSIONS = set(['py'])
+ALLOWED_EXTENSIONS = {'py'}
 
 
 def allowed_file(filename):
@@ -152,6 +157,27 @@ class ProgramManager:
         while True:
             self.load_programs()
             self.check_running_programs()
+            
+    def is_valid_ip_address(ip_address):
+        # regular expression to match an IPv4 address
+        ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
+        # regular expression to match an IPv6 address
+        ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
+        if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
+            return True
+        else:
+            return False
+
+    def is_ip_address_working(ip_address):
+        try:
+            output = subprocess.check_output(['ping', '-c', '1', ip_address])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def allowed_file(filename):
+        return '.' in filename and \
+            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 program_manager = ProgramManager()
@@ -163,6 +189,22 @@ t.start()
 
 # Define the route for the login page
 
+def is_valid_ip_address(ip_address):
+    # regular expression to match an IPv4 address
+    ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
+    # regular expression to match an IPv6 address
+    ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
+    if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
+        return True
+    else:
+        return False
+
+def is_ip_address_working(ip_address):
+    try:
+        output = subprocess.check_output(['ping', '-c', '1', ip_address])
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -408,7 +450,8 @@ def card_details_table():
                    to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
                    to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
                    to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
-                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time
+                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time,
+                   duration
                    FROM date_time_capture
                    ORDER BY id ASC
                     """)
@@ -423,7 +466,8 @@ def card_details_table():
             'idle_time': data[7],
             'pause_time': data[5],
             'resume_time': data[6],
-            'end_time': data[4]
+            'end_time': data[4],
+            'duration': data[8]
         }
         capturedDatas.append(capturedData)
     cursor.close()
@@ -434,12 +478,10 @@ def card_details_table():
 def insert_data():
     data = request.get_json()
     data_id = data['id']
-    dateEnd = str(data['dateEnd'])
-    end_date_fixed = datetime.strptime(dateEnd, '%Y-%m-%dT%H:%M')
-    end_date_string = end_date_fixed.strftime('%Y-%m-%d %H:%M:%S')
+    duration = data['duration']
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute(f"""UPDATE date_time_capture
-	SET end_time= '{dateEnd}'
+	SET duration= '{duration}'
 	WHERE id = {data_id};""")
     conn.commit()
     response = {'status': 'success'}
@@ -458,7 +500,8 @@ def get_card_details():
                    to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
                    to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
                    to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
-                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time
+                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time,
+                   duration
                    FROM date_time_capture
                    ORDER BY id ASC
                    """)
@@ -476,37 +519,88 @@ def get_card_details():
             'end_time': row[4],
             'pause_time': row[5],
             'resume_time': row[6],
-            'idle_time': row[7]
+            'idle_time': row[7],
+            'duration': row[7]
         }
         cards.append(card)
 
     return jsonify(cards)
 
 
-@app.route("/addMachines", methods=["POST", "GET"])
+@app.route("/addMachines", methods=["POST"])
 def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    if request.method == 'POST':
-        machinesData = request.files.getlist('addMachine[]')
-        controllersData = request.form['controllerInput']
+    machinesData = request.files.getlist("addMachine[]")
+    controllersData = request.form["controllerInput"]
+    ip_address = request.form["controllerIp"]
 
-        for value in machinesData:
-            # file_content = value.read()
-            cur.execute("INSERT INTO machine_tbl (path, name) VALUES (%s, %s)", ([
-                        value.filename, controllersData]))
-            conn.commit()
-            filename = os.path.basename(value.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            # Remove old file with the same name if it exists
-            if os.path.exists(filepath):
-                os.remove(filepath)
-            value.save(filepath)
-        cur.close()
-        msg = 'Success'
-        return jsonify(msg)
-    else:
-        msg = 'Invalid request method'
-    return jsonify(msg)
+    # validate the IP address
+    try:
+        ip_address = ipaddress.ip_address(ip_address)
+    except ValueError:
+        return jsonify("Invalid IP address")
+
+    # create a new SSH client
+    client = paramiko.SSHClient()
+
+    # automatically add the remote server's host key
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # connect to the remote server
+    try:
+        client.connect(hostname=str(ip_address), port=22, username='mis', password='mis')
+    except paramiko.AuthenticationException:
+        return jsonify("Authentication failed")
+    except paramiko.SSHException:
+        return jsonify("Unable to establish SSH connection")
+
+    # create the directory on the remote server
+    directory = 'UPLOADS'
+    sftp = client.open_sftp()
+    try:
+        sftp.mkdir(f'/home/mis/{directory}')
+    except:
+        pass
+
+    # upload the file to the remote server
+    for machine in machinesData:
+        remote_path = f'/home/mis/{directory}/{machine.filename}'
+        sftp.put(machine, remote_path)
+
+    # close the SFTP and SSH clients
+    sftp.close()
+    client.close()
+
+    return jsonify("File uploaded successfully")
+
+    
+
+    # for value in machinesData:
+    #     filename = os.path.basename(value.filename)
+    #     folder_path = os.path.join(os.sep, UPLOAD_FOLDER)
+    #     folder_path_with_ip = os.path.join(os.sep, ip_address, folder_path.lstrip(os.sep).replace(os.sep, os.sep + os.sep))
+    #     filepath = os.path.join("", UPLOAD_FOLDER, ip_address, filename)
+
+    #     cur.execute("INSERT INTO machine_tbl (path, name, ip_address) VALUES (%s, %s, %s)",
+    #                 (value.filename, controllersData, ip_address))
+    #     conn.commit()
+
+    #     print(folder_path)
+    #     print(folder_path_with_ip)
+    #     print(filepath)
+    #     if not os.path.exists(folder_path_with_ip):
+    #         os.makedirs(folder_path_with_ip)
+
+    #     if os.path.exists(filepath):
+    #         os.remove(filepath)
+
+    #     value.save(filepath)
+
+    #     # Transfer the file to the remote server
+    #     remote_filepath = os.path.join(UPLOAD_FOLDER, ip_address, filename)
+    #     sftp = ssh.open_sftp()
+    #     sftp.put(filepath, remote_filepath)
+    #     sftp.close()
 
 
 @app.route('/machines/delete', methods=['POST'])

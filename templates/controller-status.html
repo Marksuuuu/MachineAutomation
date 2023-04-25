@@ -162,7 +162,7 @@
               <!--add machine form Modal -->
               <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33"
                 style="display: none;" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-top modal-dialog-scrollable" role="document">
+                <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-lg" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h4 class="modal-title" id="myModalLabel33">
@@ -179,6 +179,9 @@
                     </div>
                     <form action="#" id='add-machine' name='add-machine'>
                       <div class="modal-body device-id">
+                        <label for="controllerInput">Controller IP: </label>
+                        <br>
+                        <input type="text" class="form-control" name='controllerIp' placeholder="Controller IP Address">
                         <label for="machine_name">Controller Name: </label>
                         <br>
                         <input type="text" class="form-control" name='controllerInput' placeholder="Controller Name">

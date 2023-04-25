@@ -15,6 +15,7 @@ $(document).ready(function () {
       { data: 'pause_time' },
       { data: 'resume_time' },
       { data: 'end_time' },
+      { data: 'duration' },
       {
         data: null, render: function (data, type, row) {
           return '<button type="button" class="btn btn-info rounded-pill icon icon dripicons dripicons-plus add-btn" data-id="' + row.id + '"></button> '
@@ -32,7 +33,7 @@ $(document).ready(function () {
       event.preventDefault();
       var formData = {
         'id': id,
-        'dateEnd': $('input[name="date_end"]').val(),
+        'duration': $('input[name="duration"]').val(),
       };
 
       // Send data to Flask route using Ajax
@@ -42,12 +43,36 @@ $(document).ready(function () {
         data: JSON.stringify(formData, id),
         contentType: 'application/json',
         success: function(response) {
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Save it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              Swal.fire(
+                'Deleted!',
+                'Your file has been deleted.',
+                'success'
+              )
+              table.ajax.reload();
+            }
+          })
           console.log(response);
-          alert('Data inserted successfully!');
+          
         },
         error: function(xhr, status, error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            showConfirmButton: false,
+            timer: 2000
+        })
           console.log(error);
-          alert('Error inserting data!');
+          
         }
       });
     });
