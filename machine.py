@@ -15,14 +15,14 @@ import re
 import os
 import paramiko
 import ipaddress
-
+from tempfile import NamedTemporaryFile
 
 
 
 app = Flask(__name__)
 app.secret_key = 'mark'
 socketio = SocketIO(app)
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'static\\assets\\uploads'
 
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -158,26 +158,6 @@ class ProgramManager:
             self.load_programs()
             self.check_running_programs()
             
-    def is_valid_ip_address(ip_address):
-        # regular expression to match an IPv4 address
-        ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
-        # regular expression to match an IPv6 address
-        ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
-        if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
-            return True
-        else:
-            return False
-
-    def is_ip_address_working(ip_address):
-        try:
-            output = subprocess.check_output(['ping', '-c', '1', ip_address])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-    def allowed_file(filename):
-        return '.' in filename and \
-            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 program_manager = ProgramManager()
@@ -186,6 +166,22 @@ program_manager = ProgramManager()
 
 t = threading.Thread(target=program_manager.run)
 t.start()
+
+def is_valid_ip_address(ip_address):
+    # regular expression to match an IPv4 address
+    ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
+    # regular expression to match an IPv6 address
+    ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
+    if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
+        return True
+    else:
+        return False
+def is_ip_address_working(ip_address):
+    try:
+        output = subprocess.check_output(['ping ',ip_address])
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 # Define the route for the login page
 
@@ -526,7 +522,6 @@ def get_card_details():
 
     return jsonify(cards)
 
-
 @app.route("/addMachines", methods=["POST"])
 def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -551,8 +546,8 @@ def addMachines():
         client.connect(hostname=str(ip_address), port=22, username='mis', password='mis')
     except paramiko.AuthenticationException:
         return jsonify("Authentication failed")
-    except paramiko.SSHException:
-        return jsonify("Unable to establish SSH connection")
+    except paramiko.SSHException as e:
+        return jsonify(f"Unable to establish SSH connection: {e}")
 
     # create the directory on the remote server
     directory = 'UPLOADS'
@@ -562,10 +557,24 @@ def addMachines():
     except:
         pass
 
-    # upload the file to the remote server
+    # upload the file to the server
     for machine in machinesData:
-        remote_path = f'/home/mis/{directory}/{machine.filename}'
-        sftp.put(machine, remote_path)
+        # save the uploaded file to a temporary location
+        with NamedTemporaryFile(delete=False) as temp_file:
+            machine.save(temp_file.name)
+
+            # upload the file to the remote server
+            remote_path = f'/home/mis/{directory}/{machine.filename}'
+            try:
+                sftp.put(temp_file.name, remote_path)
+            except Exception as e:
+                return jsonify(f"Failed to upload file: {e}")
+
+        # move the uploaded file into the created folder
+        try:
+            sftp.rename(remote_path, f'/home/mis/{directory}/{machine.filename}')
+        except Exception as e:
+            return jsonify(f"Failed to move file: {e}")
 
     # close the SFTP and SSH clients
     sftp.close()
@@ -573,34 +582,7 @@ def addMachines():
 
     return jsonify("File uploaded successfully")
 
-    
 
-    # for value in machinesData:
-    #     filename = os.path.basename(value.filename)
-    #     folder_path = os.path.join(os.sep, UPLOAD_FOLDER)
-    #     folder_path_with_ip = os.path.join(os.sep, ip_address, folder_path.lstrip(os.sep).replace(os.sep, os.sep + os.sep))
-    #     filepath = os.path.join("", UPLOAD_FOLDER, ip_address, filename)
-
-    #     cur.execute("INSERT INTO machine_tbl (path, name, ip_address) VALUES (%s, %s, %s)",
-    #                 (value.filename, controllersData, ip_address))
-    #     conn.commit()
-
-    #     print(folder_path)
-    #     print(folder_path_with_ip)
-    #     print(filepath)
-    #     if not os.path.exists(folder_path_with_ip):
-    #         os.makedirs(folder_path_with_ip)
-
-    #     if os.path.exists(filepath):
-    #         os.remove(filepath)
-
-    #     value.save(filepath)
-
-    #     # Transfer the file to the remote server
-    #     remote_filepath = os.path.join(UPLOAD_FOLDER, ip_address, filename)
-    #     sftp = ssh.open_sftp()
-    #     sftp.put(filepath, remote_filepath)
-    #     sftp.close()
 
 
 @app.route('/machines/delete', methods=['POST'])
