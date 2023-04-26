@@ -41,7 +41,32 @@ $(document).ready(function () {
                     icon: 'success',
                     title: 'Saved!',
                     showConfirmButton: false,
-                    timer: 2000
+                    timer: 2000,
+                    text: data.msg
+                })
+                $('#resultbox').html(data);
+            }
+        });
+    });
+    $("#button-addon1").click(function(e){
+        e.preventDefault();
+        var form = $('#add-machine')[0];
+        var formData = new FormData(form);
+        formData.append('controllerIp', formData.get('controllerIp'));
+        $.ajax({
+            url: "/check-ip-addcontroller",
+            method: "POST",
+            data: formData,
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    text: data.msg
                 })
                 $('#resultbox').html(data);
             }

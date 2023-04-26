@@ -181,7 +181,12 @@
                       <div class="modal-body device-id">
                         <label for="controllerInput">Controller IP: </label>
                         <br>
-                        <input type="text" class="form-control" name='controllerIp' placeholder="Controller IP Address">
+                          <div class="input-group">
+                            <input type="text" class="form-control" name='controllerIp' id='controllerIp' placeholder="Controller IP Address" aria-describedby="button-addon1">
+                            <button class="btn btn-info" type="button" id="button-addon1">
+                              CHECK IP
+                            </button>
+                          </div>
                         <label for="machine_name">Controller Name: </label>
                         <br>
                         <input type="text" class="form-control" name='controllerInput' placeholder="Controller Name">

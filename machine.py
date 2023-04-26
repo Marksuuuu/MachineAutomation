@@ -2,6 +2,8 @@ import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
 from flask_socketio import SocketIO, emit
 from datetime import datetime
+from tempfile import NamedTemporaryFile
+import configparser
 import psycopg2
 import psycopg2.extras
 import psutil
@@ -15,7 +17,6 @@ import re
 import os
 import paramiko
 import ipaddress
-from tempfile import NamedTemporaryFile
 
 
 
@@ -157,7 +158,6 @@ class ProgramManager:
         while True:
             self.load_programs()
             self.check_running_programs()
-            
 
 
 program_manager = ProgramManager()
@@ -167,40 +167,7 @@ program_manager = ProgramManager()
 t = threading.Thread(target=program_manager.run)
 t.start()
 
-def is_valid_ip_address(ip_address):
-    # regular expression to match an IPv4 address
-    ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
-    # regular expression to match an IPv6 address
-    ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
-    if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
-        return True
-    else:
-        return False
-def is_ip_address_working(ip_address):
-    try:
-        output = subprocess.check_output(['ping ',ip_address])
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
 # Define the route for the login page
-
-def is_valid_ip_address(ip_address):
-    # regular expression to match an IPv4 address
-    ipv4_regex = r'^(\d{1,3}\.){3}\d{1,3}$'
-    # regular expression to match an IPv6 address
-    ipv6_regex = r'^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$'
-    if re.match(ipv4_regex, ip_address) or re.match(ipv6_regex, ip_address):
-        return True
-    else:
-        return False
-
-def is_ip_address_working(ip_address):
-    try:
-        output = subprocess.check_output(['ping', '-c', '1', ip_address])
-        return True
-    except subprocess.CalledProcessError:
-        return False
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -522,18 +489,34 @@ def get_card_details():
 
     return jsonify(cards)
 
+
 @app.route("/addMachines", methods=["POST"])
 def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    config = configparser.ConfigParser()
+    config.read("connection_config.ini")
+    
     machinesData = request.files.getlist("addMachine[]")
     controllersData = request.form["controllerInput"]
     ip_address = request.form["controllerIp"]
 
+    for value in machinesData:
+        filename = os.path.basename(value.filename)
+        cur.execute("INSERT INTO machine_tbl (path, name, ip_address) VALUES (%s, %s, %s)",
+                    (value.filename, controllersData, ip_address))
+        conn.commit()
     # validate the IP address
     try:
         ip_address = ipaddress.ip_address(ip_address)
     except ValueError:
         return jsonify("Invalid IP address")
+    
+    
+    connection_name = str(ip_address)
+    remote_ip_address = config.get(connection_name, "remote_ip_address")
+    username = config.get(connection_name, "username")
+    password = config.get(connection_name, "password")
+    port = config.getint(connection_name, "port")
 
     # create a new SSH client
     client = paramiko.SSHClient()
@@ -543,7 +526,8 @@ def addMachines():
 
     # connect to the remote server
     try:
-        client.connect(hostname=str(ip_address), port=22, username='mis', password='mis')
+        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
+        print('SUCCESS')
     except paramiko.AuthenticationException:
         return jsonify("Authentication failed")
     except paramiko.SSHException as e:
@@ -564,7 +548,7 @@ def addMachines():
             machine.save(temp_file.name)
 
             # upload the file to the remote server
-            remote_path = f'/home/mis/{directory}/{machine.filename}'
+            remote_path = f'/home/mis/{directory}/{ip_address}/{machine.filename}'
             try:
                 sftp.put(temp_file.name, remote_path)
             except Exception as e:
@@ -572,17 +556,16 @@ def addMachines():
 
         # move the uploaded file into the created folder
         try:
-            sftp.rename(remote_path, f'/home/mis/{directory}/{machine.filename}')
+            sftp.rename(
+                remote_path, f'/home/mis/{directory}/{machine.filename}')
         except Exception as e:
             return jsonify(f"Failed to move file: {e}")
 
     # close the SFTP and SSH clients
     sftp.close()
     client.close()
-
-    return jsonify("File uploaded successfully")
-
-
+    msg = '"File uploaded successfully"'
+    return jsonify(msg=msg)
 
 
 @app.route('/machines/delete', methods=['POST'])
@@ -594,6 +577,101 @@ def delete_machine():
     cursor.close()
     return jsonify({'success': True})
 
+
+@app.route("/check-ip", methods=['POST'])
+def check_ip():
+    remote_ip_address = request.json["remote_ip_address"]
+    print(remote_ip_address)
+    msg = remote_ip_address
+    
+    result = subprocess.run(["ping ", remote_ip_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # check if the ping command succeeded (return code is 0)
+    print(result)
+    if not result:
+        msg = f'This {remote_ip_address} are Valid!.'
+        checking = 'FALSE'
+        return jsonify(checking=checking)
+    elif result.returncode == 0:
+        msg = f'This {remote_ip_address} are Invalid!.'
+        checking = 'TRUE'
+        return jsonify(checking=checking)
+    elif result.returncode == '':
+        msg = f'This {remote_ip_address} are Invalid!.'
+        checking = 'FALSE'
+        return jsonify(checking=checking)
+    else:
+        msg = f'This {remote_ip_address} are Invalid!.'
+        checking = 'FALSE'
+        return jsonify(checking=checking)
+    return jsonify('success')
+
+@app.route("/check-ip-addcontroller", methods=['POST','GET'])
+def check_up_add_controller():
+    config = configparser.ConfigParser()
+    config.read("connection_config.ini")
+    # check if JSON data is valid
+    remote_ip_address = request.form["controllerIp"]
+    
+    connection_name = str(remote_ip_address)
+    remote_ip_address = config.get(connection_name, "remote_ip_address")
+    username = config.get(connection_name, "username")
+    password = config.get(connection_name, "password")
+    port = config.getint(connection_name, "port")
+
+    # create a new SSH client
+    client = paramiko.SSHClient()
+
+    # automatically add the remote server's host key
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # connect to the remote server
+    try:
+        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
+        print('SUCCESS')
+    except paramiko.AuthenticationException:
+        return jsonify("Authentication failed")
+    except paramiko.SSHException as e:
+        return jsonify(f"Unable to establish SSH connection: {e}")
+    
+    directory_path = f'/home/mis/UPLOADS/{remote_ip_address}'
+
+# List all files in the directory
+    sftp = client.open_sftp()
+    files = sftp.listdir(directory_path)
+
+    # Print the list of files
+    print('\nFiles in directory:')
+    for file in files:
+        print(file)
+
+    msg = remote_ip_address
+    return jsonify(msg)
+
+
+
+
+@app.route("/save-connection", methods=["POST"])
+def save_connection():
+    # Get the connection parameters from the request data
+    connection_name = request.json["connection_name"]
+    remote_ip_address = request.json["remote_ip_address"]
+    username = request.json["username"]
+    password = request.json["password"]
+    port = request.json["port"]
+
+    # Save the connection parameters to a configuration file
+    config = configparser.ConfigParser()
+    config[connection_name] = {
+        "remote_ip_address": remote_ip_address,
+        "username": username,
+        "password": password,
+        "port": port
+    }
+    with open("connection_config.ini", "a") as config_file:
+          config.write(config_file)
+    # Return a JSON response with the status message
+    msg = '"Connection configuration saved successfully."'
+    return jsonify(msg=msg)
 
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
@@ -626,6 +704,11 @@ def view_programs():
 def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
+
+@app.route('/configuration')
+def configuration():
+    print('Go to Config')
+    return render_template('configuration-setup.html')
 
 
 @app.route('/machine_uph')

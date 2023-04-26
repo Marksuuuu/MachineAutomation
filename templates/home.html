@@ -117,6 +117,8 @@
                 </div>
             </div>
         </div>
+
+        
         <div id="main" class='layout-navbar'>
             <header class='mb-3'>
                 <nav class="navbar navbar-expand navbar-light navbar-top">
@@ -154,7 +156,7 @@
                                     <li>
                                         <h6 class="dropdown-header">Hello, {{ session['firstname']}}!</h6>
                                     </li>
-                                    <li><a class="dropdown-item" href="{{ url_for('view_programs') }}"><i class="icon-mid bi bi-bezier me-2"></i>All Programs Status</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('configuration') }}"><i class="icon-mid bi bi-bezier me-2"></i>Check Configurations</a></li>
                                     <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-gear me-2"></i>
                                             Settings</a></li>
                                     <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-wallet me-2"></i>
