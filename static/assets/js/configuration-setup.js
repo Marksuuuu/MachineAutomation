@@ -11,8 +11,9 @@ $(document).ready(function() {
       var username = $("#username").val();
       var password = $("#password").val();
       var port = $("#port").val();
+      var max_inputs = $("#max_inputs").val();
 
-      if (connectionName == '' || remoteIpAddress == '' || username == '' || password == '' || port == ''){
+      if (connectionName == '' || remoteIpAddress == '' || username == '' || password == '' || port == '' || max_inputs == ''){
         Swal.fire({
             icon: 'error',
             title: 'Please enter IP!',
@@ -31,7 +32,8 @@ $(document).ready(function() {
           remote_ip_address: remoteIpAddress,
           username: username,
           password: password,
-          port: port
+          port: port,
+          max_inputs: max_inputs
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -91,6 +93,11 @@ $(document).ready(function() {
         $("#username").val('');
         $("#password").val('');
         $("#port").val('');
+        $("#max_inputs").val('');
 
-    })
+    });
   });
+
+
+
+

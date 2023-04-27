@@ -154,8 +154,7 @@
           <div class="card-header">
             <div class="form-group">
               <!-- Button trigger for login form modal -->
-              <button type="button" style="float: right;" class="btn btn-primary text-right" data-bs-toggle="modal"
-                data-bs-target="#inlineForm">
+              <button type="button" style="float: right;" class="btn btn-primary text-right" data-toggle="modal" id='openBtn'
                 <span>ADD CONTROLLER</span>
               </button>
 
@@ -178,27 +177,35 @@
                       </button>
                     </div>
                     <form action="#" id='add-machine' name='add-machine'>
-                      <div class="modal-body device-id">
-                        <label for="controllerInput">Controller IP: </label>
+                     <div class="modal-body device-id">
+                      <!--   <label for="controllerInput">Controller IP: </label>
                         <br>
                           <div class="input-group">
                             <input type="text" class="form-control" name='controllerIp' id='controllerIp' placeholder="Controller IP Address" aria-describedby="button-addon1">
                             <button class="btn btn-info" type="button" id="button-addon1">
                               CHECK IP
                             </button>
-                          </div>
+                          </div>-->
                         <label for="machine_name">Controller Name: </label>
                         <br>
                         <input type="text" class="form-control" name='controllerInput' placeholder="Controller Name">
-                        <label for="machine_name">Machines Name: </label>
                         <br>
-                        <div class="input-group mb-3" id="addContainer">
+                        <table class="table" id="check-ip-tbl">
+                          <thead>
+                            <tr>
+                              <th>Filename</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody id='check-ip-tbl-tbody'></tbody>
+                        </table>
+                    <div class="input-group mb-3" id="addContainer">
                           <div class="input-group mb-3"><input type="file" name="addMachine[]" class="form-control"
                               required placeholder="Machine Name" id="field_'+ FieldCount +'"
                               aria-label="Example text with button addon" aria-describedby="button-addon1" /></p><button
                               class="btn btn-info ms-1" type="button" id="addButton">&#43;</button></div>
                         </div>
-                        <!-- <button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">Add Machine Field</button>-->
+                       <!-- <button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">Add Machine Field</button>-->
                       </div>
                       <div class="modal-footer">
                         </button>

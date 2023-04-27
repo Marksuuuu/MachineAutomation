@@ -19,7 +19,6 @@ import paramiko
 import ipaddress
 
 
-
 app = Flask(__name__)
 app.secret_key = 'mark'
 socketio = SocketIO(app)
@@ -168,6 +167,7 @@ t = threading.Thread(target=program_manager.run)
 t.start()
 
 # Define the route for the login page
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -495,7 +495,7 @@ def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     config = configparser.ConfigParser()
     config.read("connection_config.ini")
-    
+
     machinesData = request.files.getlist("addMachine[]")
     controllersData = request.form["controllerInput"]
     ip_address = request.form["controllerIp"]
@@ -510,8 +510,7 @@ def addMachines():
         ip_address = ipaddress.ip_address(ip_address)
     except ValueError:
         return jsonify("Invalid IP address")
-    
-    
+
     connection_name = str(ip_address)
     remote_ip_address = config.get(connection_name, "remote_ip_address")
     username = config.get(connection_name, "username")
@@ -526,7 +525,8 @@ def addMachines():
 
     # connect to the remote server
     try:
-        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
+        client.connect(hostname=remote_ip_address, port=port,
+                       username=username, password=password)
         print('SUCCESS')
     except paramiko.AuthenticationException:
         return jsonify("Authentication failed")
@@ -583,8 +583,9 @@ def check_ip():
     remote_ip_address = request.json["remote_ip_address"]
     print(remote_ip_address)
     msg = remote_ip_address
-    
-    result = subprocess.run(["ping ", remote_ip_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    result = subprocess.run(["ping ", remote_ip_address],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # check if the ping command succeeded (return code is 0)
     print(result)
     if not result:
@@ -605,18 +606,20 @@ def check_ip():
         return jsonify(checking=checking)
     return jsonify('success')
 
-@app.route("/check-ip-addcontroller", methods=['POST','GET'])
+
+@app.route("/check-ip-addcontroller", methods=['POST', 'GET'])
 def check_up_add_controller():
     config = configparser.ConfigParser()
     config.read("connection_config.ini")
     # check if JSON data is valid
     remote_ip_address = request.form["controllerIp"]
-    
+
     connection_name = str(remote_ip_address)
     remote_ip_address = config.get(connection_name, "remote_ip_address")
     username = config.get(connection_name, "username")
     password = config.get(connection_name, "password")
     port = config.getint(connection_name, "port")
+    max_inputs = config.getint(connection_name, "max_inputs")
 
     # create a new SSH client
     client = paramiko.SSHClient()
@@ -626,13 +629,14 @@ def check_up_add_controller():
 
     # connect to the remote server
     try:
-        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
+        client.connect(hostname=remote_ip_address, port=port,
+                       username=username, password=password)
         print('SUCCESS')
     except paramiko.AuthenticationException:
         return jsonify("Authentication failed")
     except paramiko.SSHException as e:
         return jsonify(f"Unable to establish SSH connection: {e}")
-    
+
     directory_path = f'/home/mis/UPLOADS/{remote_ip_address}'
 
 # List all files in the directory
@@ -641,13 +645,14 @@ def check_up_add_controller():
 
     # Print the list of files
     print('\nFiles in directory:')
+    data = []
     for file in files:
         print(file)
+        data.append({'file_name': file})
+    print(data)
 
     msg = remote_ip_address
-    return jsonify(msg)
-
-
+    return jsonify(data=data)
 
 
 @app.route("/save-connection", methods=["POST"])
@@ -658,6 +663,7 @@ def save_connection():
     username = request.json["username"]
     password = request.json["password"]
     port = request.json["port"]
+    max_inputs = request.json["max_inputs"]
 
     # Save the connection parameters to a configuration file
     config = configparser.ConfigParser()
@@ -665,13 +671,46 @@ def save_connection():
         "remote_ip_address": remote_ip_address,
         "username": username,
         "password": password,
-        "port": port
+        "port": port,
+        "max_inputs": max_inputs
     }
     with open("connection_config.ini", "a") as config_file:
-          config.write(config_file)
+        config.write(config_file)
     # Return a JSON response with the status message
     msg = '"Connection configuration saved successfully."'
     return jsonify(msg=msg)
+
+
+@app.route('/config-datatable', methods=['GET', 'POST'])
+def get_config():
+    config = configparser.ConfigParser()
+    config.read('connection_config.ini')
+
+    data = []
+    for section in config.sections():
+        if config.has_option(section, 'remote_ip_address') and config.has_option(section, 'username') and config.has_option(section, 'password') and config.has_option(section, 'port'):
+            remote_ip_address = config.get(section, 'remote_ip_address')
+            username = config.get(section, 'username')
+            password = config.get(section, 'password')
+            port = config.get(section, 'port')
+            data.append({'remote_ip_address': remote_ip_address,
+                        'username': username, 'password': password, 'port': port})
+    print(data)
+    return jsonify(data=data)
+
+@app.route('/get-max-inputs', methods=['POST'])
+def get_max_inputs():
+    config = configparser.ConfigParser()
+    config.read('connection_config.ini')
+    
+    data = []
+    for section in config.sections():
+        if config.has_option(section, 'max_inputs'):
+            max_inputs = config.get(section, 'max_inputs')
+            data.append({'max_inputs': max_inputs})
+    print(data)
+    return jsonify(data=data)
+
 
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
@@ -705,6 +744,7 @@ def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
 
+
 @app.route('/configuration')
 def configuration():
     print('Go to Config')
@@ -719,7 +759,7 @@ def machine_uph():
 
 @app.route('/captured_time')
 def captured_time():
-    print('Go to machine uph')
+    print('Go to Capture Time')
     return render_template('captured_time.html')
 
 
