@@ -39,6 +39,12 @@ $(document).ready(function() {
         dataType: "json",
         success: function(data) {
           // Display the status message
+            Swal.fire({
+              icon: 'error',
+              title: 'Max Inputs reached!',
+              text: MaxInputsGlobal,
+              showConfirmButton: true,
+          })
           console.log(data.msg)
           $("#status").text(data.message);
         },

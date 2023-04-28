@@ -552,7 +552,7 @@ def addMachines():
             machine.save(temp_file.name)
 
             # upload the file to the remote server
-            remote_path = f'/home/mis/{directory}/{ip_address}/{machine.filename}'
+            remote_path = f'/home/mis/{directory}/{machine.filename}'
             try:
                 sftp.put(temp_file.name, remote_path)
             except Exception as e:
@@ -641,9 +641,8 @@ def check_up_add_controller():
     except paramiko.SSHException as e:
         return jsonify(f"Unable to establish SSH connection: {e}")
 
-    directory_path = f'/home/mis/UPLOADS/{remote_ip_address}'
+    directory_path = f'/home/mis/UPLOADS/'
 
-# List all files in the directory
     sftp = client.open_sftp()
     files = sftp.listdir(directory_path)
 
