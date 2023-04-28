@@ -5,6 +5,8 @@ $(document).ready(function () {
     var AddButton = $("#addButton"); //Add button ID
     var x = InputsWrapper.find('div').length; //initial text box count
     var FieldCount = x; //to keep track of text box added
+    var ipAddress;
+    var MaxInputsGlobal;
 
     $(AddButton).click(function (e) { //on add input button click
         $.ajax({
@@ -12,9 +14,9 @@ $(document).ready(function () {
             type: "POST",
             datatype: 'json',
             success: function (data) {
-                var MaxInputs = data.data[0].max_inputs;
-                console.log(MaxInputs)
-                if (x < MaxInputs) { //max input box allowed
+                // if (ipAddress == data.data.remote_ip_address){
+                // }
+                if (x < MaxInputsGlobal) { //max input box allowed
                     FieldCount++; //text box added increment
                     //add input box
                     var display = '<div class="input-group mb-3">'
@@ -28,6 +30,13 @@ $(document).ready(function () {
                         + "</div>";
                     $(InputsWrapper).append(display);
                     x++; //text box increment
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Max Inputs reached!',
+                        text: 'expected ' + MaxInputsGlobal,
+                        showConfirmButton: true,
+                    })
                 }
                 console.log(data); // handle the server response here
             },
@@ -71,6 +80,7 @@ $(document).ready(function () {
                 $('#resultbox').html(data);
             }
         });
+        console.log(formData)
     });
     $("#button-addon1").click(function (e) {
         e.preventDefault();
@@ -85,47 +95,46 @@ $(document).ready(function () {
             enctype: 'multipart/form-data',
             processData: false,
             contentType: false,
+            beforeSend: function () {
+                $('#waitMemodal').waitMe({
+                    effect: 'rotateplane',
+                    text: 'Please wait...',
+                    bg: 'rgba(255,255,255,0.7)',
+                    color: '#435ebe',
+                    maxSize: '',
+                    waitTime: -1,
+                    textPos: 'vertical',
+                    fontSize: '',
+                    source: ''
+                });
+            },
             success: function (data) {
                 var result = data.data;
-                if (result != null) {
-                    console.log(data, result.length);
-                    $('#check-ip-tbl').show();
-                    var var_tbody = '';
-                    for (var x = 0; x < result.length; x++) {
-                        var fileName = result[x].file_name;
-                        if (fileName) {
-                            var_tbody += '<tr>'
-                                + '<td>' + fileName + '</td>'
-                                + '<td><button class="btn btn-info" type="button" id="button-addon1">CHECK IP</button></td>'
-                                + '</tr>';
-                        } else {
-                            console.log('File name is empty');
-                        }
-                    }
-                    tbody.html(var_tbody);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'No Data Found!',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        text: data
-                    })
+                MaxInputsGlobal = result[0].max_inputs
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Found!',
+                    showConfirmButton: true,
+                    text: 'Maximum Inputs ' + MaxInputsGlobal,
+                })
+                console.log('MaxInputs', MaxInputsGlobal)
 
-                }
-
+                // Handle the result here
 
             },
-            // error: function (xhr, status, error) {
-            //     Swal.fire({
-            //         title: 'SQL Error',
-            //         text: 'Please contact MIS (Loc 267)!',
-            //         icon: 'error',
-            //         allowOutsideClick: false
-            //     });
-            // }
+            error: function (xhr, status, error) {
+                Swal.fire({
+                    title: 'SQL Error',
+                    text: 'Please contact MIS (Loc 267)!',
+                    icon: 'error',
+                    allowOutsideClick: false
+                });
+            }
+        }).done(function () {
+            $('#waitMemodal').waitMe('hide');
         });
     });
+
     $("#openBtn").click(function (e) {
         $('#inlineForm').modal('show');
     })

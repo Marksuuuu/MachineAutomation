@@ -12,6 +12,7 @@
     type="image/x-icon">
   <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.png') }}" type="image/png">
 
+  <link href="https://cdn.jsdelivr.net/npm/waitme@1.19.0/waitMe.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/fontawesome.css') }}">
   <link rel="stylesheet"
     href="{{url_for('static', filename='assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}">
@@ -149,7 +150,7 @@
 
       <!-- for add machines -->
       <!-- Basic Tables start -->
-      <section class="section">
+      <section class="section" id='container'>
         <div class="card">
           <div class="card-header">
             <div class="form-group">
@@ -162,6 +163,7 @@
               <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33"
                 style="display: none;" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-lg" role="document">
+                  <div id='waitMemodal'>
                   <div class="modal-content">
                     <div class="modal-header">
                       <h4 class="modal-title" id="myModalLabel33">
@@ -178,14 +180,14 @@
                     </div>
                     <form action="#" id='add-machine' name='add-machine'>
                      <div class="modal-body device-id">
-                      <!--   <label for="controllerInput">Controller IP: </label>
+                         <label for="controllerInput">Controller IP: </label>
                         <br>
                           <div class="input-group">
                             <input type="text" class="form-control" name='controllerIp' id='controllerIp' placeholder="Controller IP Address" aria-describedby="button-addon1">
                             <button class="btn btn-info" type="button" id="button-addon1">
                               CHECK IP
                             </button>
-                          </div>-->
+                          </div>
                         <label for="machine_name">Controller Name: </label>
                         <br>
                         <input type="text" class="form-control" name='controllerInput' placeholder="Controller Name">
@@ -207,7 +209,7 @@
                         </div>
                        <!-- <button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">Add Machine Field</button>-->
                       </div>
-                      <div class="modal-footer">
+                      <div class="modal-footer" id='footer'>
                         </button>
                         <button type="button" id='submit' class="btn btn-primary ms-1" data-bs-dismiss="modal">
                           <i class="bx bx-check d-block d-sm-none"></i>
@@ -216,6 +218,7 @@
                       </div>
                     </form>
                   </div>
+                </div>
                 </div>
               </div>
 
@@ -315,8 +318,9 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Add the following script tags to your HTML templates -->
   <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/waitme@1.19.0/waitMe.min.js"></script>
   <script src="{{url_for('static', filename='assets/js/insert_data.js') }}"></script>
+  
 
 </body>
 

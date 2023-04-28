@@ -11,13 +11,14 @@
   <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.svg') }}"
     type="image/x-icon">
   <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.png') }}" type="image/png">
-
   <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/fontawesome.css') }}">
   <link rel="stylesheet"
     href="{{url_for('static', filename='assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/css/pages/datatables.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
   <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/@icon/dripicons/dripicons.css') }}">
+  
+  <link href="https://cdn.jsdelivr.net/npm/waitme@1.19.0/waitMe.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -158,6 +159,7 @@
               <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33"
                 style="display: none;" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-lg" role="document">
+                  <div id="waitMemodal">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h4 class="modal-title" id="myModalLabel33">
@@ -202,6 +204,7 @@
                     </form>
                   </div>
                 </div>
+                </div>
               </div>
           
           </div>
@@ -233,10 +236,9 @@
   <script src="{{url_for('static', filename='assets/js/pages/datatables.js') }}"></script>
   <script src="{{url_for('static', filename='assets/js/configuration-setup.js') }}"></script>
   <script src="{{url_for('static', filename='assets/js/configuration-setup-tbl.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/waitme@1.19.0/waitMe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Add the following script tags to your HTML templates -->
-<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
-
 </body>
 
 </html>

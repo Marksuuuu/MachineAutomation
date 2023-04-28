@@ -68,13 +68,47 @@ $(document).ready(function() {
             }),
             contentType: "application/json; charset=utf-8",
             dataType: "json",
+            beforeSend: function() {
+              $('#waitMemodal').waitMe({
+                  effect: 'rotateplane',
+                  text: 'Please wait...',
+                  bg: 'rgba(255,255,255,0.7)',
+                  color: '#435ebe',
+                  maxSize: '',
+                  waitTime: -1,
+                  textPos: 'vertical',
+                  fontSize: '',
+                  source: ''
+              });
+          },
             success: function(data) {
               // Display the status message
               if (data.checking == 'FALSE'){
+                Swal.fire({
+                  icon: 'error',
+                  title: 'IP INVALID!',
+                  showConfirmButton: false,
+                  timer: 2000,
+                  text: 'please enter valid ip'
+                })
                 $('#submit').prop('disabled', true);
               }else if (data.checking == null){
+                Swal.fire({
+                  icon: 'success',
+                  title: 'IP INVALID!',
+                  showConfirmButton: false,
+                  timer: 2000,
+                  text: 'please enter valid ip'
+                })
                 $('#submit').prop('disabled', true);
               }else{
+                Swal.fire({
+                  icon: 'success',
+                  title: 'IP VALID!',
+                  showConfirmButton: false,
+                  timer: 2000,
+                  text: data
+                })
                 $('#submit').prop('disabled', false);
               }
               console.log(data.checking)
@@ -82,7 +116,9 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
               // Display the error message
             }
-          });
+          }).done(function() {
+            $('#waitMemodal').waitMe('hide');
+        });
 
     });
     $('#add_config_button').click(function(e){

@@ -19,6 +19,10 @@ import paramiko
 import ipaddress
 
 
+
+
+
+
 app = Flask(__name__)
 app.secret_key = 'mark'
 socketio = SocketIO(app)
@@ -495,7 +499,7 @@ def addMachines():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     config = configparser.ConfigParser()
     config.read("connection_config.ini")
-
+    
     machinesData = request.files.getlist("addMachine[]")
     controllersData = request.form["controllerInput"]
     ip_address = request.form["controllerIp"]
@@ -510,7 +514,8 @@ def addMachines():
         ip_address = ipaddress.ip_address(ip_address)
     except ValueError:
         return jsonify("Invalid IP address")
-
+    
+    
     connection_name = str(ip_address)
     remote_ip_address = config.get(connection_name, "remote_ip_address")
     username = config.get(connection_name, "username")
@@ -525,8 +530,7 @@ def addMachines():
 
     # connect to the remote server
     try:
-        client.connect(hostname=remote_ip_address, port=port,
-                       username=username, password=password)
+        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
         print('SUCCESS')
     except paramiko.AuthenticationException:
         return jsonify("Authentication failed")
@@ -555,11 +559,11 @@ def addMachines():
                 return jsonify(f"Failed to upload file: {e}")
 
         # move the uploaded file into the created folder
-        try:
-            sftp.rename(
-                remote_path, f'/home/mis/{directory}/{machine.filename}')
-        except Exception as e:
-            return jsonify(f"Failed to move file: {e}")
+        # try:
+        #     sftp.rename(
+        #         remote_path, f'/home/mis/{directory}/{machine.filename}')
+        # except Exception as e:
+        #     return jsonify(f"Failed to move file: {e}")
 
     # close the SFTP and SSH clients
     sftp.close()
@@ -644,14 +648,15 @@ def check_up_add_controller():
     files = sftp.listdir(directory_path)
 
     # Print the list of files
-    print('\nFiles in directory:')
+    # print('\nFiles in directory:')
     data = []
-    for file in files:
-        print(file)
-        data.append({'file_name': file})
+    # for file in files:
+    #     print(file)
+    data.append({'max_inputs': max_inputs})
     print(data)
 
-    msg = remote_ip_address
+    msg = 'SUCCESS'
+    ip = remote_ip_address
     return jsonify(data=data)
 
 
@@ -698,16 +703,19 @@ def get_config():
     print(data)
     return jsonify(data=data)
 
+
 @app.route('/get-max-inputs', methods=['POST'])
 def get_max_inputs():
     config = configparser.ConfigParser()
     config.read('connection_config.ini')
-    
+
     data = []
     for section in config.sections():
-        if config.has_option(section, 'max_inputs'):
+        if config.has_option(section, 'max_inputs') and (section, 'remote_ip_address'):
             max_inputs = config.get(section, 'max_inputs')
-            data.append({'max_inputs': max_inputs})
+            remote_ip_address = config.get(section, 'remote_ip_address')
+            data.append({'max_inputs': max_inputs,
+                        'remote_ip_address': remote_ip_address})
     print(data)
     return jsonify(data=data)
 
