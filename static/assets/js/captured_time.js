@@ -8,14 +8,14 @@ $(document).ready(function () {
     lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
     columns: [
       { data: 'id' },
-      { data: 'current_path' },
+      { data: 'device_id' },
       { data: 'status' },
-      { data: 'start_time' },
-      { data: 'idle_time' },
-      { data: 'pause_time' },
-      { data: 'resume_time' },
-      { data: 'end_time' },
-      { data: 'duration' },
+      { data: 'operator' },
+      { data: 'assigned_gl' },
+      { data: 'operation_code' },
+      { data: 'operation' },
+      { data: 'area' },
+
       {
         data: null, render: function (data, type, row) {
           return '<button type="button" class="btn btn-info rounded-pill icon icon dripicons dripicons-plus add-btn" data-id="' + row.id + '"></button> '

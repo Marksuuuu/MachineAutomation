@@ -10,7 +10,9 @@ $(document).ready(function () {
       { data: 'id' },
       { data: 'name' },
       {
-        data: null, render: function (row) {
+        data: null, 
+        className: 'text-center',
+        render: function (row) {
           return '<button type="button" class="btn btn-info rounded-pill icon icon dripicons dripicons-expand-2 show-btn" data-id="' + row.id + '"></button> '+ 
           ' <button type="button" class="btn btn-danger rounded-pill icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button>';
         }

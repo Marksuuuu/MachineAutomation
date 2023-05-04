@@ -17,7 +17,7 @@ import re
 import os
 import paramiko
 import ipaddress
-
+import socket
 
 
 
@@ -93,41 +93,41 @@ class ProgramManager:
     def __init__(self):
         self.programs = []
 
-    def load_programs(self):
-        self.programs.clear()
-        cur.execute('SELECT * FROM machine_tbl')
-        for row in cur.fetchall():
-            program = Program(row[0], row[1], row[2])
-            self.programs.append(program)
+    # def load_programs(self):
+    #     self.programs.clear()
+    #     cur.execute('SELECT * FROM machine_tbl')
+    #     for row in cur.fetchall():
+    #         program = Program(row[0], row[1], row[2])
+    #         self.programs.append(program)
 
-    def add_program(self, name, path):
-        cur.execute(
-            'SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
-        count = cur.fetchone()[0]
-        if count == 0:
-            cur.execute(
-                'INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
-            conn.commit()
-            self.load_programs()
-            return True
-        else:
-            return False
+    # def add_program(self, name, path):
+    #     cur.execute(
+    #         'SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
+    #     count = cur.fetchone()[0]
+    #     if count == 0:
+    #         cur.execute(
+    #             'INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
+    #         conn.commit()
+    #         self.load_programs()
+    #         return True
+    #     else:
+    #         return False
 
-    def check_running_programs(self):
-        for program in self.programs:
-            if program.is_running():
-                status = 'running'
-                date_start = datetime.now()
-                cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s',
-                            (status, date_start, program.id))
-                conn.commit()
+    # def check_running_programs(self):
+    #     for program in self.programs:
+    #         if program.is_running():
+    #             status = 'running'
+    #             date_start = datetime.now()
+    #             cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s',
+    #                         (status, date_start, program.id))
+    #             conn.commit()
 
-            else:
-                status = 'stopped'
-                date_stop = datetime.now()
-                cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s',
-                            (status, date_stop, program.id))
-                conn.commit()
+    #         else:
+    #             status = 'stopped'
+    #             date_stop = datetime.now()
+    #             cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s',
+    #                         (status, date_stop, program.id))
+    #             conn.commit()
 
     def count_total_machine(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -157,18 +157,36 @@ class ProgramManager:
         total_count = cursor.fetchall()
         return total_count
 
-    def run(self):
-        while True:
-            self.load_programs()
-            self.check_running_programs()
+    # def run(self):
+    #     while True:
+            # self.load_programs()
+            # self.check_running_programs()
 
 
 program_manager = ProgramManager()
 
 # Run the program manager in a separate thread
 
-t = threading.Thread(target=program_manager.run)
-t.start()
+# t = threading.Thread(target=program_manager.run)
+# t.start()
+
+
+def handle_client(conn, addr):
+    # Send a message to the client
+    message = "Hello from the server!"
+    conn.sendall(message.encode('utf-8'))
+
+    # Receive data from the client endlessly
+    while True:
+        data = conn.recv(1024)
+        if not data: # If no data is received, assume the client has disconnected
+            print(f"Client at {addr} has disconnected")
+            break
+        print(f"Received {len(data)} bytes from client at {addr}: {data.decode('utf-8')}")
+
+    # Close the connection
+    conn.close()
+
 
 # Define the route for the login page
 
@@ -411,15 +429,14 @@ def card_details_table():
     cursor.execute("""
                    SELECT
                    id,
-                   current_path,
+                   device_id,
                    status,
-                   to_char(start_time, 'Month dd,YYYY hh24:mi:ss') as start_time,
-                   to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
-                   to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
-                   to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
-                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time,
-                   duration
-                   FROM date_time_capture
+                   operator,
+                   assigned_gl,
+                   operation_code,
+                   operation,
+                   area
+                   FROM machine_data_tbl
                    ORDER BY id ASC
                     """)
     dataResult = cursor.fetchall()
@@ -427,14 +444,13 @@ def card_details_table():
     for data in dataResult:
         capturedData = {
             'id': data[0],
-            'current_path': data[1],
+            'device_id': data[1],
             'status': data[2],
-            'start_time': data[3],
-            'idle_time': data[7],
-            'pause_time': data[5],
-            'resume_time': data[6],
-            'end_time': data[4],
-            'duration': data[8]
+            'operator': data[3],
+            'assigned_gl': data[4],
+            'operation_code': data[5],
+            'operation': data[6],
+            'area': data[7]
         }
         capturedDatas.append(capturedData)
     cursor.close()
@@ -461,15 +477,14 @@ def get_card_details():
     cursor.execute("""
                    SELECT
                    id,
-                   current_path,
+                   device_id,
                    status,
-                   to_char(start_time, 'Month dd,YYYY hh24:mi:ss') as start_time,
-                   to_char(end_time, 'Month dd,YYYY hh24:mi:ss') as end_time,
-                   to_char(pause_time, 'Month dd,YYYY hh24:mi:ss') as pause_time,
-                   to_char(resume_time, 'Month dd,YYYY hh24:mi:ss') as resume_time,
-                   to_char(idle_time, 'Month dd,YYYY hh24:mi:ss') as idle_time,
-                   duration
-                   FROM date_time_capture
+                   operator,
+                   assigned_gl,
+                   operation_code,
+                   operation,
+                   area
+                   FROM machine_data_tbl
                    ORDER BY id ASC
                    """)
     card_data = cursor.fetchall()
@@ -480,14 +495,13 @@ def get_card_details():
     for row in card_data:
         card = {
             'id': row[0],
-            'current_path': row[1],
+            'device_id': row[1],
             'status': row[2],
-            'start_time': row[3],
-            'end_time': row[4],
-            'pause_time': row[5],
-            'resume_time': row[6],
-            'idle_time': row[7],
-            'duration': row[7]
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
         }
         cards.append(card)
 
@@ -681,7 +695,7 @@ def save_connection():
     with open("connection_config.ini", "a") as config_file:
         config.write(config_file)
     # Return a JSON response with the status message
-    msg = '"Connection configuration saved successfully."'
+    msg = 'Connection configuration saved successfully.'
     return jsonify(msg=msg)
 
 
@@ -718,6 +732,72 @@ def get_max_inputs():
     print(data)
     return jsonify(data=data)
 
+@socketio.on('connect')
+def handle_connect():
+    client_ip = request.remote_addr
+    print('Client connected', client_ip)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    client_ip = request.remote_addr
+    print('Client disconnected', client_ip)
+
+@socketio.on('message')
+def handle_message(message):
+    client_ip = request.remote_addr
+    print(message)
+    print(f'Received message from {client_ip}: {message}')
+    emit('response', f'Server received message from {client_ip}: ' + message)
+
+@socketio.on('data')
+def handle_data(data, stat_var, uID):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    client_ip = request.remote_addr
+    print(f'Received data from {client_ip}: {data}')
+    emit('response', f'Server received data from {client_ip}: ' + str(data))
+    
+    print(data['operator'])
+    print(data['assigned_gl'])
+    print(data['operation_code'])
+    print(data['operation'])
+    print(data['area'])
+    print(stat_var)
+    print(uID)
+    
+    try:
+        cur.execute("INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area) VALUES (%s, %s, %s, %s, %s, %s, %s)", 
+                    (uID, stat_var, data['operator'],data['assigned_gl'],data['operation_code'],data['operation'],data['area']))
+        conn.commit()
+        print("Data inserted successfully into the database")
+        return jsonify("Data inserted successfully into the database")
+    except Exception as e:
+        print("Error inserting data into the database:", e)
+        conn.rollback()
+        return jsonify("Error inserting data into the database:", e)
+    finally:
+        cur.close()
+    
+@socketio.on('stop_data')
+def handle_data(stat_var, uID):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    client_ip = request.remote_addr
+    print(f'Received data from {client_ip}')
+    emit('response', f'Server received data from {client_ip}: ')
+    
+    print(stat_var)
+    
+    try:
+        cur.execute(f"UPDATE public.machine_data_tbl SET status='{stat_var}' WHERE device_id='{uID}'")
+        conn.commit()
+        print("Data inserted successfully into the database")
+        return jsonify("Data inserted successfully into the database")
+    except Exception as e:
+        print("Error inserting data into the database:", e)
+        conn.rollback()
+        return jsonify("Error inserting data into the database:", e)
+    finally:
+        cur.close()
+        
 
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
@@ -751,7 +831,6 @@ def all_device():
     print('Go to All Devices')
     return render_template('layout-vertical-1-column.html')
 
-
 @app.route('/configuration')
 def configuration():
     print('Go to Config')
@@ -778,4 +857,5 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8083, debug=True)
+    # app.run(host='localhost', port=8090, debug=True)
+    socketio.run(app, host='10.0.2.150', port=8090, debug=True)
