@@ -9,7 +9,19 @@ $(document).ready(function () {
     columns: [
       { data: 'id' },
       { data: 'device_id' },
-      { data: 'status' },
+      {
+        data: 'status',
+            render: function (data, type, row) {
+                // Check the value of 'status' and return a badge with appropriate color
+                if (data === 'STARTED') {
+                    return '<span class="badge bg-success status'+row.id+'">' + data + '</span>';
+                } else if (data === 'STOP') {
+                    return '<span class="badge bg-danger">' + data + '</span>';
+                } else {
+                    return data;
+                }
+            }
+        },
       { data: 'operator' },
       { data: 'assigned_gl' },
       { data: 'operation_code' },

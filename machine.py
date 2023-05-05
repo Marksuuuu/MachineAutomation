@@ -17,7 +17,7 @@ import re
 import os
 import paramiko
 import ipaddress
-import socket
+import socketio
 
 
 
@@ -25,18 +25,18 @@ import socket
 
 app = Flask(__name__)
 app.secret_key = 'mark'
-socketio = SocketIO(app)
 UPLOAD_FOLDER = 'static\\assets\\uploads'
 
 
+clients = {}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+socketio = SocketIO(app)
 global running_process
 running_process = None
 
 ALLOWED_EXTENSIONS = {'py'}
-
 
 def allowed_file(filename):
     for extension in ALLOWED_EXTENSIONS:
@@ -216,7 +216,7 @@ def login():
                 session['lastname'] = user_data['lastname']
                 session['username'] = user_data['username']
                 session['fullname'] = user_data['fullname']
-                session['employee_position'] = user_data['employee_position']
+                session['employee_department'] = user_data['employee_position']
 
                 photo_url = session['photo_url'] = user_data['photo_url']
 
@@ -735,12 +735,17 @@ def get_max_inputs():
 @socketio.on('connect')
 def handle_connect():
     client_ip = request.remote_addr
+    status = 'CONNECTED'
+    clients[request.sid] = client_ip
+    emit('client_connected', {'ip': client_ip,  'status': status}, broadcast=True)
     print('Client connected', client_ip)
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    client_ip = request.remote_addr
-    print('Client disconnected', client_ip)
+    ip = clients.pop(request.sid, None)
+    if ip:
+        emit('client_disconnected', {'ip': ip}, broadcast=True)
+    print('Client disconnected', ip)
 
 @socketio.on('message')
 def handle_message(message):
@@ -810,7 +815,7 @@ def index():
     count_machines_running = program_manager.count_total_machine_running()
     count_machines_stopped = program_manager.count_total_machine_stopped()
     return render_template('home.html', count_machines=count_machines,
-                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
+                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped, clients=clients)
 
 
 @app.route('/data_table')

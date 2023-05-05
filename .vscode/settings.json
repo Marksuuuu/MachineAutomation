@@ -4,6 +4,6 @@
     },
     "python.formatting.provider": "none",
     "[django-html]": {
-        "editor.defaultFormatter": null
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
