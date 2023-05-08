@@ -8,7 +8,7 @@ $(document).ready(function () {
     columns: [
   
       { data: 'id' },
-      { data: 'name' },
+      { data: 'fetched_ip' },
       {
         data: null, 
         className: 'text-center',
@@ -50,30 +50,31 @@ $(document).ready(function () {
 
   $('#machine-table').on('click', '.show-btn', function(){
     var id = $(this).attr('data-id'); // Get the ID value from the element attribute
-  
-    // AJAX call to get data
+    console.log(id)
+    
     $.ajax({
       url: '/get_name',
       method: 'POST',
       data: {id: id}, // Pass the ID in the data payload
       success: function(response) {
         var data = response.result; // Extract the result data from the response
+        console.log(data)
         // Check if data is not empty
         if (data !== null) {
           // Generate HTML for table rows
           var html = '';
           for (var i = 0; i < data.length; i++) {
-            var name = data[i][0]; // Accessing Name
-            var status = data[i][3]; // Accessing status
-            var start_time = data[i][4]; // Accessing date
-            var end_time = data[i][5]; // Accessing date
+            var id = data[i][0]; // Accessing Name
+            var ip = data[i][1]; // Accessing status
+            var status = data[i][2]; // Accessing date
+            console.log(i)
   
   
             var badgeClass = '';
-            if (status == 'IN PRODUCTION' || status == "STARTED") {
+            if (status == 'CONNECTED') {
               badgeClass = 'badge bg-success"';
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
-            } else if (status == 'STOP DOWNTIME' || status == 'MACHINE DOWNTIME') {
+            } else if (status == 'DISCONNECTED') {
               badgeClass = 'badge bg-danger';
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
             } else {
@@ -81,10 +82,9 @@ $(document).ready(function () {
               badge = '<span class="' + badgeClass + '">' + status + '</span>'
             }
             html += '<tr>';
-            html += '<td>' + name + '</td>';
+            html += '<td>' + id + '</td>';
             html += '<td>' + badge + '</td>';
-            html += '<td>' + start_time + '</td>';
-            html += '<td>' + end_time + '</td>';
+            html += '<td>' + ip + '</td>';
             html += '</tr>';
           }
   

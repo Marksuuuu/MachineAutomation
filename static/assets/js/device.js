@@ -59,13 +59,13 @@ $(document).ready(function () {
                         + '</div>'
                         + '<dl class="widget-49-pro-title text-dark">'
                         + '<dt>OPERATOR</dt>'
-                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-'+ item.operator +'</dd>'
+                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.operator + '</dd>'
                         + '<dt>ASSIGNED GL</dt>'
-                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-'+ item.assigned_gl +'</dd>'
+                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.assigned_gl + '</dd>'
                         + '<dt>AREA</dt>'
-                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-'+ item.area +'</dd>'
+                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.area + '</dd>'
                         + '<dt>OPERATION</dt>'
-                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-'+ item.operation +'</dd>'
+                        + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.operation + '</dd>'
                         + '</dl>'
                         + '</div>'
                         + '</div>'
@@ -101,6 +101,9 @@ $(document).ready(function () {
 
     // // Other initialization code
     fetchAndCreateCards();
+    setTimeout(function () {
+        window.location.reload();
+    }, 100000);
 
     // var timer = null;
     // var startTime = null;
@@ -170,7 +173,7 @@ $(document).ready(function () {
     //             console.log('Reached', duration)
     //             saveData(); // Save data after each tick
     //         }
-            
+
     //     }, 1000);
     //     console.log(timer)
     //     return timer;

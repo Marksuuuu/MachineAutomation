@@ -216,7 +216,7 @@ def login():
                 session['lastname'] = user_data['lastname']
                 session['username'] = user_data['username']
                 session['fullname'] = user_data['fullname']
-                session['employee_department'] = user_data['employee_position']
+                session['employee_department'] = user_data['employee_department']
 
                 photo_url = session['photo_url'] = user_data['photo_url']
 
@@ -253,13 +253,13 @@ def process():
 def get_machines():
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT MIN(id) AS id, name FROM machine_tbl GROUP BY name;")
+        "SELECT MAX(id) AS id, fetched_ip FROM fetched_ip_tbl GROUP BY fetched_ip;")
     rows = cursor.fetchall()
     machines = []
     for row in rows:
         machines.append({
             'id': row[0],
-            'name': row[1]
+            'fetched_ip': row[1]
         })
     cursor.close()
     return jsonify({'data': machines})
@@ -378,31 +378,18 @@ def get_name():
 
     # Perform a database query to fetch the item name based on the item ID
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cursor.execute("SELECT name FROM machine_tbl WHERE id = %s", (item_id,))
-    result = cursor.fetchone()
+    cursor.execute(f"""
+                   SELECT
+                   id,
+                   fetched_ip,
+                   status
+                   FROM fetched_ip_tbl
+                   WHERE id = {item_id}
+                   ORDER BY id ASC
+                    """)
+    dataResult = cursor.fetchall()
     cursor.close()
-
-    # Check if result is not empty
-    if result:
-        # Fetch the 'name' value from the result dictionary
-        item_name = result['name']
-        print(item_name)
-        # Perform another database query using the item_name
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("""SELECT a.path,b.*
-                       FROM 
-                       machine_tbl a,
-                       date_time_capture b
-                       WHERE a.path = b.current_path
-                       AND a.name = %s""", (item_name,))
-        result2 = cursor.fetchall()
-        print(result2)
-        cursor.close()
-
-        # Return the second query result as JSON response
-        return jsonify(result=result2)
-    else:
-        return jsonify(result=None)
+    return jsonify(result=dataResult)
 
 
 @app.route('/save_pause', methods=['POST'])
@@ -457,35 +444,35 @@ def card_details_table():
     return jsonify({'data': capturedDatas})
 
 
-@app.route('/insert_data', methods=['POST'])
+@app.route('/delete_data', methods=['POST'])
 def insert_data():
-    data = request.get_json()
-    data_id = data['id']
-    duration = data['duration']
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cursor.execute(f"""UPDATE date_time_capture
-	SET duration= '{duration}'
-	WHERE id = {data_id};""")
+    cursor = conn.cursor()
+    id = request.form['id']
+    cursor.execute("DELETE FROM machine_data_tbl WHERE id = %s", (id,))
     conn.commit()
-    response = {'status': 'success'}
-    return jsonify(response)
+    cursor.close()
+    return jsonify({'success': True})
 
 
 @app.route('/card_details')
 def get_card_details():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                   SELECT
-                   id,
-                   device_id,
-                   status,
-                   operator,
-                   assigned_gl,
-                   operation_code,
-                   operation,
-                   area
-                   FROM machine_data_tbl
-                   ORDER BY id ASC
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id;
                    """)
     card_data = cursor.fetchall()
     cursor.close()
@@ -732,6 +719,44 @@ def get_max_inputs():
     print(data)
     return jsonify(data=data)
 
+@app.route('/insert_ip_data', methods=['POST'])
+def insert_ip_data():
+    fetched_ip = request.json["fetched_ip"]
+    status = request.json["status"]
+    print('FETCHED HERE', fetched_ip, status)
+    
+    # Check if the fetched_ip already exists in the database
+    cur.execute("SELECT COUNT(*) FROM public.fetched_ip_tbl WHERE fetched_ip = %s", (fetched_ip,))
+    if cur.fetchone()[0] > 0:
+        # If it does, return an error response
+        return jsonify("Data already exists in the database")
+    else:
+        return jsonify("Data already exists in the database")
+
+    if status == 'CONNECTED':
+        cur.execute(f"UPDATE public.fetched_ip_tbl SET status='{status}' WHERE fetched_ip='{fetched_ip}'")
+        conn.commit()
+        print("Data Updated successfully into the database")
+    else:
+        # If it doesn't, insert the data into the database
+        cur.execute("INSERT INTO public.fetched_ip_tbl (fetched_ip, status) VALUES (%s, %s)", (fetched_ip, status))
+        conn.commit()
+        print("Data inserted successfully into the database")
+    return jsonify("Data inserted successfully into the database")
+
+
+@app.route('/disconnect_ip_data', methods=['POST'])
+def disconnect_ip_data():
+    fetched_ip = request.json["fetched_ip"]
+    status = request.json["status"]
+    print('FETCHED HERE', status)
+    cur.execute(f"UPDATE public.fetched_ip_tbl SET fetched_ip='{fetched_ip}', status='{status}' WHERE fetched_ip='{fetched_ip}'")
+    conn.commit()
+    print("Data Updated successfully")
+    return jsonify("Data Updated successfully")
+
+
+## SOCKET IO CONNECTION ##
 @socketio.on('connect')
 def handle_connect():
     client_ip = request.remote_addr
@@ -743,8 +768,9 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     ip = clients.pop(request.sid, None)
+    status = 'CONNECTED'
     if ip:
-        emit('client_disconnected', {'ip': ip}, broadcast=True)
+        emit('client_disconnected', {'ip': ip, 'status': status}, broadcast=True)
     print('Client disconnected', ip)
 
 @socketio.on('message')
@@ -815,7 +841,7 @@ def index():
     count_machines_running = program_manager.count_total_machine_running()
     count_machines_stopped = program_manager.count_total_machine_stopped()
     return render_template('home.html', count_machines=count_machines,
-                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped, clients=clients)
+                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
 
 
 @app.route('/data_table')
@@ -863,4 +889,4 @@ def logout():
 
 if __name__ == '__main__':
     # app.run(host='localhost', port=8090, debug=True)
-    socketio.run(app, host='10.0.2.150', port=8090, debug=True)
+    socketio.run(app, host='10.0.2.150', port=8091, debug=True)
