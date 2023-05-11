@@ -265,23 +265,23 @@
                             </div>
                         </div>
 
-                        <div class="modal fade modal-lg" id="myModal">
-                            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                        <div class="modal fade modal-xl" id="myModal">
+                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Machines</h5>
+                                        <h5 class="modal-title">Controller IP : <span id='controller_ip'></span></h5>
                                         <button type="button" class="close" data-bs-dismiss='modal' aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <table class="table" style="width:100%">
+                                        <table class="table" id='machine_result_id' style="width:100%">
                                             <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>IP</th>
                                                 <th>STATUS</th>
                                                 <th>Session ID</th>
+                                                <th>Ports</th>
                                                 <th>Machine Name</th>
                                             </tr>
                                             </thead>
@@ -289,49 +289,6 @@
                                             <!-- Element to display data from AJAX call -->
                                         </table>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal fade text-left" id="editMachine" tabindex="-1"
-                             aria-labelledby="myModalLabel33"
-                             style="display: none;" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-top modal-dialog-scrollable" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h4 class="modal-title" id="myModalLabel33">
-                                            Edit Controller
-                                        </h4>
-                                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                 viewBox="0 0 24 24" fill="none"
-                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                 stroke-linejoin="round"
-                                                 class="feather feather-x">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <form action="#" id='edit-machine'>
-                                        <div class="modal-body">
-                                            <div class="input-group mb-3">
-                                                <button class="btn btn-primary" type="button" id="button-addon1">
-                                                    Button
-                                                </button>
-                                                <input type="text" class="form-control" id='name-path' placeholder=""
-                                                       aria-label="Example text with button addon"
-                                                       aria-describedby="button-addon1">
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            </button>
-                                            <button type="submit" class="btn btn-primary ms-1" data-bs-dismiss="modal">
-                                                <i class="bx bx-check d-block d-sm-none"></i>
-                                                <span class="d-none d-sm-block">Add</span>
-                                            </button>
-                                        </div>
-                                    </form>
                                 </div>
                             </div>
                         </div>

@@ -27,7 +27,7 @@ $(document).ready(function () {
       { data: 'operation_code' },
       { data: 'operation' },
       { data: 'area' },
-      { data: 'machine_name' },
+      { data: 'port' },
 
       {
         data: null, render: function (data, type, row) {

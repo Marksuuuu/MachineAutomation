@@ -204,12 +204,13 @@ def get_name():
                        fetched_ip, 
                        status, 
                        sid,
+                       port,
                        machine_name
                        FROM 
                        public.fetched_ip_tbl
                        WHERE
                        fetched_ip = %s
-                       AND machine_name !=''
+                       AND port !=''
                        ORDER BY id DESC LIMIT 5
                        """, (ip,))
         result2 = cursor.fetchall()
@@ -219,6 +220,19 @@ def get_name():
         return jsonify(result=result2)
     else:
         return jsonify(result=None)
+    
+@app.route('/insert_machine_name', methods=['POST'])
+def insert_machine_name():
+    cursor = conn.cursor()
+    form_id = request.form['id']
+    machine_name = request.form['machine_name_var']
+    cursor.execute(f"""UPDATE 
+                   public.fetched_ip_tbl
+                   SET machine_name = '{machine_name}'
+                   WHERE id = '{form_id}'""")
+    conn.commit()
+    cursor.close()
+    return jsonify({'success': True})
 
 
 @app.route('/card_details_table')
@@ -705,21 +719,33 @@ def get_max_inputs():
 def insert_ip_data():
     try:
         machine_name = request.json["machine_name"]
-        remove_py = re.sub('.py','',machine_name)
+        remove_py = re.sub('.py', '', machine_name)
         fetched_ip = request.json["fetched_ip"]
         status = request.json["status"]
         fetched_sid = request.json["fetched_sid"]
-        print('tessstt', request.json)
-        print('FETCHED HERE', fetched_ip, status, remove_py)
-        cur.execute("INSERT INTO public.fetched_ip_tbl (fetched_ip, status, sid, machine_name) VALUES (%s, %s, %s, %s)",
-                    (fetched_ip, status, fetched_sid, remove_py))
-        conn.commit()  # commit the transaction
-        print("Data inserted successfully into the database")
-        return jsonify("Data inserted successfully into the database")
+
+        cur.execute(
+            "SELECT COUNT(machine_name) FROM public.fetched_ip_tbl WHERE port = %s", (remove_py,))
+        count = cur.fetchone()[0]
+
+        if count > 0:
+            # data already exists, update
+            cur.execute("UPDATE public.fetched_ip_tbl SET status = %s, sid = %s WHERE port = %s",
+                        (status, fetched_sid, remove_py))
+            conn.commit()  # commit the transaction
+            print("Data updated successfully in the database")
+            return jsonify("Data updated successfully in the database")
+        else:
+            # data doesn't exist, insert
+            cur.execute("INSERT INTO public.fetched_ip_tbl (fetched_ip, status, sid, port) VALUES (%s, %s, %s, %s)",
+                        (fetched_ip, status, fetched_sid, remove_py))
+            conn.commit()  # commit the transaction
+            print("Data inserted successfully into the database")
+            return jsonify("Data inserted successfully into the database")
     except Exception as e:
         conn.rollback()  # rollback the transaction if an error occurs
-        print("An error occurred while inserting data:", e)
-        return jsonify("An error occurred while inserting data")
+        print("An error occurred while inserting/updating data:", e)
+        return jsonify("An error occurred while inserting/updating data")
 
 
 ## SOCKET IO CONNECTION ##
@@ -729,9 +755,12 @@ def handle_client_connected(data):
     client_ip = request.remote_addr
     print('Client connected:', request.sid, client_ip)
     machine_name = data['machine_name']
-    print(f"Client with SID {request.sid} connected with machine name {machine_name}")
+    print(
+        f"Client with SID {request.sid} connected with machine name {machine_name}")
     # Send a response event back to the client
-    socketio.emit('server_response', {'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name})
+    socketio.emit('server_response', {
+                  'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name})
+
 
 @socketio.on('disconnect')
 def handle_disconnect():

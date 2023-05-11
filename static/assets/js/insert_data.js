@@ -135,9 +135,6 @@ $(document).ready(function () {
         });
     });
 
-    $("#openBtn").click(function (e) {
-        $('#inlineForm').modal('show');
-    })
 });
 
 

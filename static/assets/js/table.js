@@ -43,43 +43,75 @@ $(document).ready(function () {
       data: { id: id }, // Pass the ID in the data payload
       success: function (response) {
         var data = response.result; // Extract the result data from the response
-        console.log(data)
+
         // Check if data is not empty
         if (data !== null) {
           // Generate HTML for table rows
+          var fetchedIp = ''; // Initialize fetchedIp variable
+          for (var i = 0; i < data.length; i++) {
+            fetchedIp = data[i][1]; // Set fetchedIp to the current value
+
+            // Exit the loop after the first iteration
+            break;
+          }
+
+          $('#controller_ip').html(fetchedIp); // Set the value of the #controller_ip element to the fetchedIp value
+
           var html = '';
           for (var i = 0; i < data.length; i++) {
             var id = data[i][0]; // Accessing Name
-            var fetched_ip = data[i][1]; // Accessing ip
             var status = data[i][2]; // Accessing status
             var sid = data[i][3]; // Accessing sid
-            var machine_name = data[i][4]; // Accessing machine_name
+            var port = data[i][4]; // Accessing port
+            var machine_name = data[i][5]; // Accessing machine_name
+
+            var inputButton;
+            var badgeClass = '';
+
+
+            if (machine_name === null) {
+              if (status == 'CONNECTED') {
+                badgeClass = 'badge bg-success"';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+                inputButton = '<div class="input-group mb-3"><input type="text" id="machine_name_var" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="save-btn"><button class="icon dripicons dripicons-plus btn btn-outline-success save-btn" type="button" data-id="' + id + '"></div>'
+              } else if (status == 'DISCONNECTED') {
+                badgeClass = 'badge bg-danger';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+                inputButton = '<div class="input-group mb-3"><input type="text" id="machine_name_var" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="save-btn" disabled><button class="icon dripicons dripicons-cross btn disabled btn-danger save-btn" type="button" data-id="' + id + '"></div>'
+              } else {
+                badgeClass = 'badge bg-primary';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+              }
+            } else {
+              if (status == 'CONNECTED') {
+                badgeClass = 'badge bg-success"';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+                inputButton = '<div ><span style="border:none; margin-right:50px;" aria-describedby="save-btn">' + machine_name + '</span><button class="icon dripicons dripicons-pencil btn btn-outline-success edit-btn" type="button" data-id="' + id + '"></div>'
+              } else if (status == 'DISCONNECTED') {
+                badgeClass = 'badge bg-danger';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+                inputButton = '<div><span style="border:none; margin-right:50px;" aria-describedby="save-btn">' + machine_name + '</span><button class="icon dripicons dripicons-pencil btn disabled btn-danger" type="button" data-id="' + id + '"></div>'
+              } else {
+                badgeClass = 'badge bg-primary';
+                badge = '<span class="' + badgeClass + '">' + status + '</span>'
+              }
+
+            }
             console.log(i)
 
 
-            var badgeClass = '';
-            if (status == 'CONNECTED') {
-              badgeClass = 'badge bg-success"';
-              badge = '<span class="' + badgeClass + '">' + status + '</span>'
-            } else if (status == 'DISCONNECTED') {
-              badgeClass = 'badge bg-danger';
-              badge = '<span class="' + badgeClass + '">' + status + '</span>'
-            } else {
-              badgeClass = 'badge bg-primary';
-              badge = '<span class="' + badgeClass + '">' + status + '</span>'
-            }
             html += '<tr>';
             html += '<td>' + id + '</td>';
-            html += '<td>' + fetched_ip + '</td>';
             html += '<td>' + badge + '</td>';
             html += '<td>' + sid + '</td>';
-            html += '<td>' + machine_name + '</td>';
+            html += '<td>' + port + '</td>';
+            html += '<td>' + inputButton + '</td>';
             html += '</tr>';
           }
 
+
           // Set the generated HTML as the content of the modal body
           $('#modal-data').html(html);
-
           // Show the modal
           $('#myModal').modal('show');
         } else {
@@ -93,8 +125,33 @@ $(document).ready(function () {
       }
     });
   });
+  $('#machine_result_id tbody').on('click', '.edit-btn', function () {
+    console.log('edit')
 
+  });
 
+  $('#machine_result_id tbody').on('click', '.save-btn', function () {
+    var id = $(this).attr('data-id');
+    var machine_name_var = $('#machine_name_var').val()
+    console.log(id, machine_name_var)
+    $('#default').modal('show');
+    $.ajax({
+      url: '/insert_machine_name',
+      method: 'POST',
+      data: {
+        id: id,
+        machine_name_var: machine_name_var
+      },
+      success: function (result) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Saved!',
+          showConfirmButton: true,
+          text: 'Succesfully Saved!.',
+        })
+      }
+    });
+  });
 
   $('#machine-table').on('click', '.delete-btn', function () {
     Swal.fire({
@@ -130,6 +187,7 @@ $(document).ready(function () {
     })
 
   });
+
 
 });
 
