@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='assets/css/main/app.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/main/app-dark.css') }}">
-    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.svg') }}"
+    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
           type="image/x-icon">
     <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.png') }}" type="image/png">
 
@@ -27,7 +27,7 @@
                         <a href="index.html">Machine Metric System</a>
                     </div>
                     <div class="theme-toggle d-flex gap-2  align-items-center mt-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                        <svg xmlns="http://www.w3.org/2000/svg"
                              aria-hidden="true" role="img" class="iconify iconify--system-uicons" width="20"
                              height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 21 21">
                             <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round"
@@ -47,7 +47,7 @@
                             <input class="form-check-input  me-0" type="checkbox" id="toggle-dark">
                             <label class="form-check-label"></label>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                        <svg xmlns="http://www.w3.org/2000/svg"
                              aria-hidden="true" role="img" class="iconify iconify--mdi" width="20" height="20"
                              preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
                             <path fill="currentColor"
@@ -298,7 +298,8 @@
 <script src="{{url_for('static', filename='assets/js/login.js') }}"></script>
 <!-- Add the following script tags to your HTML templates -->
 <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
+<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="{{url_for('static', filename='assets/js/pages/socket-io-data.js') }}"></script>
 
 </body>
 

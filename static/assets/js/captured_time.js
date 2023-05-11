@@ -27,10 +27,11 @@ $(document).ready(function () {
       { data: 'operation_code' },
       { data: 'operation' },
       { data: 'area' },
+      { data: 'machine_name' },
 
       {
         data: null, render: function (data, type, row) {
-          return '<button type="button" class="btn btn-danger rounded-pill icon icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button> '
+          return '<button type="button" class="btn btn-outline-danger icon icon dripicons dripicons-trash delete-btn" data-id="' + row.id + '"></button> '
         }
       }
 

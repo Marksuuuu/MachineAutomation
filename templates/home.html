@@ -8,9 +8,9 @@
 
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='assets/css/main/app.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/main/app-dark.css') }}">
-    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.svg') }}"
+    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
           type="image/x-icon">
-    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/favicon.png') }}" type="image/png">
+    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon.png') }}" type="image/png">
 
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/shared/iconly.css')}}">
 
@@ -26,7 +26,7 @@
                         Machine Metric System
                     </div>
                     <div class="theme-toggle d-flex gap-2  align-items-center mt-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                        <svg xmlns="http://www.w3.org/2000/svg"
                              aria-hidden="true" role="img" class="iconify iconify--system-uicons" width="20"
                              height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 21 21">
                             <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round"
@@ -46,7 +46,7 @@
                             <input class="form-check-input  me-0" type="checkbox" id="toggle-dark">
                             <label class="form-check-label"></label>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                        <svg xmlns="http://www.w3.org/2000/svg"
                              aria-hidden="true" role="img" class="iconify iconify--mdi" width="20" height="20"
                              preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
                             <path fill="currentColor"
@@ -79,14 +79,42 @@
                         </a>
                     </li>
 
-                    <li class="sidebar-title">Operations Devices</li>
+                    <li class="sidebar-title">Areas</li>
 
-                    <li class="sidebar-item ">
-                        <a href="{{url_for('all_device') }}" class='sidebar-link'>
-                            <i class="bi bi-table"></i>
-                            <span>Machines</span>
+                    <li class="sidebar-item has-sub">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Areas</span>
                         </a>
+
+                        <ul class="submenu submenu-open" style="--submenu-height: 192px;">
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('die_prep') }}" class="submenu-link">Die Prep</a>
+                            </li>
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('die_attached') }}" class="submenu-link">Die Attached</a>
+                            </li>
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('wirebond') }}" class="submenu-link">Wirebond</a>
+                            </li>
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('mold') }}" class="submenu-link">Mold</a>
+                            </li>
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('eol1') }}" class="submenu-link">EOL1</a>
+                            </li>
+                            <li class="submenu-item has-sub">
+                                <a href="{{ url_for('eol2') }}" class="submenu-link">EOL2</a>
+                            </li>
+                        </ul>
                     </li>
+
+                    <!-- <li class="sidebar-item ">
+                          <a href="{{url_for('all_device') }}" class='sidebar-link'>
+                              <i class="bi bi-table"></i>
+                              <span>Machines</span>
+                          </a>
+                      </li>-->
 
                     <li class="sidebar-title">Menus</li>
 
@@ -97,21 +125,23 @@
                         </a>
 
                         <ul class="submenu submenu-open" style="--submenu-height:129px;">
-                            <li class="submenu-item">
-                                <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
-                            </li>
+                            <!--     <li class="submenu-item">
+                                     <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
+                                 </li>
+
+                                 <li class="submenu-item">
+                                     <a href="{{ url_for('machine_uph') }}" class="submenu-link">Machine Uph</a>
+                                 </li>
+                                 -->
 
                             <li class="submenu-item">
-                                <a href="{{ url_for('machine_uph') }}" class="submenu-link">Machine Uph</a>
-                            </li>
-
-                            <li class="submenu-item">
-                                <a href="{{ url_for('captured_time') }}" class="submenu-link">Captured Dates</a>
+                                <a href="{{ url_for('captured_data') }}" class="submenu-link">Captured Data</a>
 
 
                             </li>
                         </ul>
                     </li>
+
 
                 </ul>
             </div>
@@ -268,8 +298,8 @@
                 </section>
             </div>
 
-</div>
-</div>
+        </div>
+    </div>
 </div>
 <script src="{{url_for('static', filename='assets/js/bootstrap.js') }}"></script>
 <script src="{{url_for('static', filename='assets/js/app.js') }}"></script>

@@ -18,9 +18,7 @@ import os
 import paramiko
 import ipaddress
 import socketio
-
-
-
+import re
 
 
 app = Flask(__name__)
@@ -37,6 +35,7 @@ global running_process
 running_process = None
 
 ALLOWED_EXTENSIONS = {'py'}
+
 
 def allowed_file(filename):
     for extension in ALLOWED_EXTENSIONS:
@@ -93,63 +92,6 @@ class ProgramManager:
     def __init__(self):
         self.programs = []
 
-    # def load_programs(self):
-    #     self.programs.clear()
-    #     cur.execute('SELECT * FROM machine_tbl')
-    #     for row in cur.fetchall():
-    #         program = Program(row[0], row[1], row[2])
-    #         self.programs.append(program)
-
-    # def add_program(self, name, path):
-    #     cur.execute(
-    #         'SELECT COUNT(*) FROM machine_tbl WHERE name = %s AND path = %s', (name, path))
-    #     count = cur.fetchone()[0]
-    #     if count == 0:
-    #         cur.execute(
-    #             'INSERT INTO machine_tbl (name, path, status) VALUES (%s, %s, %s)', (name, path, 'stopped'))
-    #         conn.commit()
-    #         self.load_programs()
-    #         return True
-    #     else:
-    #         return False
-
-    # def check_running_programs(self):
-    #     for program in self.programs:
-    #         if program.is_running():
-    #             status = 'running'
-    #             date_start = datetime.now()
-    #             cur.execute('UPDATE machine_tbl SET status = %s, date_start = %s WHERE id = %s',
-    #                         (status, date_start, program.id))
-    #             conn.commit()
-
-    #         else:
-    #             status = 'stopped'
-    #             date_stop = datetime.now()
-    #             cur.execute('UPDATE machine_tbl SET status = %s, date_stop = %s WHERE id = %s',
-    #                         (status, date_stop, program.id))
-    #             conn.commit()
-
-    def count_total_machine(self):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute(
-            'SELECT count(name) as total_machines FROM machine_tbl WHERE name IN (SELECT MAX(name) FROM machine_tbl GROUP BY name)')
-        total_count = cursor.fetchone()
-        return total_count
-
-    def count_total_machine_running(self):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute(
-            "SELECT count(status) FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name) and status = 'running'")
-        total_count = cursor.fetchone()
-        return total_count
-
-    def count_total_machine_stopped(self):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute(
-            "SELECT count(status) FROM machine_tbl WHERE id IN (SELECT MAX(id) FROM machine_tbl GROUP BY name) and status = 'stopped'")
-        total_count = cursor.fetchone()
-        return total_count
-
     def view_table_func(self):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(
@@ -157,35 +99,8 @@ class ProgramManager:
         total_count = cursor.fetchall()
         return total_count
 
-    # def run(self):
-    #     while True:
-            # self.load_programs()
-            # self.check_running_programs()
-
 
 program_manager = ProgramManager()
-
-# Run the program manager in a separate thread
-
-# t = threading.Thread(target=program_manager.run)
-# t.start()
-
-
-def handle_client(conn, addr):
-    # Send a message to the client
-    message = "Hello from the server!"
-    conn.sendall(message.encode('utf-8'))
-
-    # Receive data from the client endlessly
-    while True:
-        data = conn.recv(1024)
-        if not data: # If no data is received, assume the client has disconnected
-            print(f"Client at {addr} has disconnected")
-            break
-        print(f"Received {len(data)} bytes from client at {addr}: {data.decode('utf-8')}")
-
-    # Close the connection
-    conn.close()
 
 
 # Define the route for the login page
@@ -234,21 +149,6 @@ def login():
         return render_template('auth-login.html')
 
 
-@app.route('/process', methods=['POST'])
-def process():
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    msg = ''
-    machine_name = request.form['machine_name']
-    program_path = request.form['program_path']
-    status = 'stopped'
-    cursor.execute("INSERT INTO machine_tbl (name, path, status) VALUES (%s,%s,%s)",
-                   (machine_name, program_path, status))
-    conn.commit()
-    msg = 'success'
-    return jsonify({'name': msg})
-
-
 @app.route('/machines')
 def get_machines():
     cursor = conn.cursor()
@@ -281,133 +181,44 @@ def get_category():
     return jsonify({'data': category_data})
 
 
-@app.route('/programs')
-def get_programs():
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM machine_tbl;")
-    rows = cursor.fetchall()
-    programs = []
-    for data in rows:
-        program = {
-            'id': data[0],
-            'path': data[2],
-            'status': data[3],
-            'date_start': data[4],
-            'date_stop': data[5]
-        }
-        programs.append(program)
-        print(data)
-    cursor.close()
-    return jsonify({'data': programs})
-
-
-@app.route('/execute', methods=['POST'])
-def execute_program():
-    global running_process  # Access the global running_process variable
-    if running_process and running_process.poll() is None:
-        # If there is a running process, and it has not terminated yet,
-        # send a response indicating that a program is already running
-        return jsonify(msg="A program is already running. Please stop it first.")
-    else:
-        id = int(request.form['id'])  # Retrieve ID from the request form data
-
-        # Perform a database query to fetch the name based on the ID
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT path FROM machine_tbl WHERE id = %s", (id,))
-        fetchedData = cursor.fetchone()
-        print(fetchedData)
-        cursor.close()
-
-        # Check if result is not empty
-        if fetchedData:
-            # Fetch the 'path' value from the result dictionary
-            item_path = fetchedData['path']
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-
-            # Change the current working directory of the Python script to the script directory
-            program_path = f"cd {script_dir}'\\static\\assets\\uploads' && python {item_path}"
-            command = re.sub(r"'", "", program_path)
-
-            # Build the command to execute
-            print(command)
-            # Perform another database query using the item_path
-            running_process = subprocess.Popen(
-                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = running_process.communicate()
-
-            print("Output:")
-            print(stdout.decode('utf-8'))
-            print("Error:")
-            print(stderr.decode('utf-8'))
-
-            if running_process.returncode == 0:
-                msg = "Program executed successfully."
-                print("Program executed successfully.")
-            else:
-                msg = "Program executed successfully."
-                print(
-                    f"Program execution failed with return code {running_process.returncode}.")
-
-            # Return the second query result as JSON response
-            return jsonify(msg=msg)
-        else:
-            return jsonify(result=None)
-
-
-@app.route('/stop_execute', methods=['POST'])
-def stop_execute_program():
-    global running_process
-
-    # Check if there is a running process
-    if running_process:
-        try:
-            # Terminate the running process
-            running_process.terminate()
-            running_process = None  # Reset the global variable
-            return jsonify(msg="Program execution stopped successfully.")
-        except Exception as e:
-            return jsonify(msg=f"Failed to stop program execution: {str(e)}"), 500
-    else:
-        # If no running process, return an response
-        return jsonify(msg="No program is currently running."), 400
-
-
 @app.route('/get_name', methods=['POST'])
 def get_name():
     item_id = int(request.form['id'])  # Retrieve ID from the request form data
 
-    # Perform a database query to fetch the item name based on the item ID
+    # Perform a database query to fetch the fetched_ip based on the item ID
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cursor.execute(f"""
-                   SELECT
-                   id,
-                   fetched_ip,
-                   status
-                   FROM fetched_ip_tbl
-                   WHERE id = {item_id}
-                   ORDER BY id ASC
-                    """)
-    dataResult = cursor.fetchall()
-    cursor.close()
-    return jsonify(result=dataResult)
-
-
-@app.route('/save_pause', methods=['POST'])
-def save_pause():
-    data = json.loads(request.data)
-    pauseTime = data['pauseTime']
-    machineId = data['machineId']
-    print('machine ID ', machineId)
-    # establish connection to database
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    # insert data into database
     cursor.execute(
-        "INSERT INTO captured_dates (machine_id, pause_time) VALUES (%s, %s)", (machineId, pauseTime))
-    # close connection to database
-    conn.commit()
+        "SELECT fetched_ip FROM fetched_ip_tbl WHERE id = %s", (item_id,))
+    result = cursor.fetchone()
+    cursor.close()
 
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    # Check if result is not empty
+    if result:
+        # Fetch the 'fetched_ip' value from the result dictionary
+        ip = result['fetched_ip']
+        print(ip)
+        # Perform another database query using the ip
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""SELECT 
+                       id, 
+                       fetched_ip, 
+                       status, 
+                       sid,
+                       machine_name
+                       FROM 
+                       public.fetched_ip_tbl
+                       WHERE
+                       fetched_ip = %s
+                       AND machine_name !=''
+                       ORDER BY id DESC LIMIT 5
+                       """, (ip,))
+        result2 = cursor.fetchall()
+        cursor.close()
+
+        # Return the second query result as JSON response
+        return jsonify(result=result2)
+    else:
+        return jsonify(result=None)
 
 
 @app.route('/card_details_table')
@@ -422,7 +233,8 @@ def card_details_table():
                    assigned_gl,
                    operation_code,
                    operation,
-                   area
+                   area,
+                   machine_name
                    FROM machine_data_tbl
                    ORDER BY id ASC
                     """)
@@ -437,7 +249,8 @@ def card_details_table():
             'assigned_gl': data[4],
             'operation_code': data[5],
             'operation': data[6],
-            'area': data[7]
+            'area': data[7],
+            'machine_name': data[8]
         }
         capturedDatas.append(capturedData)
     cursor.close()
@@ -495,82 +308,250 @@ def get_card_details():
     return jsonify(cards)
 
 
-@app.route("/addMachines", methods=["POST"])
-def addMachines():
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    config = configparser.ConfigParser()
-    config.read("connection_config.ini")
-    
-    machinesData = request.files.getlist("addMachine[]")
-    controllersData = request.form["controllerInput"]
-    ip_address = request.form["controllerIp"]
+@app.route('/card_details_wirebond')
+def card_details_wirebond():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Wirebond';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
 
-    for value in machinesData:
-        filename = os.path.basename(value.filename)
-        cur.execute("INSERT INTO machine_tbl (path, name, ip_address) VALUES (%s, %s, %s)",
-                    (value.filename, controllersData, ip_address))
-        conn.commit()
-    # validate the IP address
-    try:
-        ip_address = ipaddress.ip_address(ip_address)
-    except ValueError:
-        return jsonify("Invalid IP address")
-    
-    
-    connection_name = str(ip_address)
-    remote_ip_address = config.get(connection_name, "remote_ip_address")
-    username = config.get(connection_name, "username")
-    password = config.get(connection_name, "password")
-    port = config.getint(connection_name, "port")
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
 
-    # create a new SSH client
-    client = paramiko.SSHClient()
+    return jsonify(cards)
 
-    # automatically add the remote server's host key
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    # connect to the remote server
-    try:
-        client.connect(hostname=remote_ip_address, port=port, username=username, password=password)
-        print('SUCCESS')
-    except paramiko.AuthenticationException:
-        return jsonify("Authentication failed")
-    except paramiko.SSHException as e:
-        return jsonify(f"Unable to establish SSH connection: {e}")
+@app.route('/card_details_eol1')
+def card_details_eol1():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'EOL1';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
 
-    # create the directory on the remote server
-    directory = 'UPLOADS'
-    sftp = client.open_sftp()
-    try:
-        sftp.mkdir(f'/home/mis/{directory}')
-    except:
-        pass
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
 
-    # upload the file to the server
-    for machine in machinesData:
-        # save the uploaded file to a temporary location
-        with NamedTemporaryFile(delete=False) as temp_file:
-            machine.save(temp_file.name)
+    return jsonify(cards)
 
-            # upload the file to the remote server
-            remote_path = f'/home/mis/{directory}/{machine.filename}'
-            try:
-                sftp.put(temp_file.name, remote_path)
-            except Exception as e:
-                return jsonify(f"Failed to upload file: {e}")
 
-        # move the uploaded file into the created folder
-        # try:
-        #     sftp.rename(
-        #         remote_path, f'/home/mis/{directory}/{machine.filename}')
-        # except Exception as e:
-        #     return jsonify(f"Failed to move file: {e}")
+@app.route('/card_details_eol2')
+def card_details_eol2():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'EOL2';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
 
-    # close the SFTP and SSH clients
-    sftp.close()
-    client.close()
-    msg = '"File uploaded successfully"'
-    return jsonify(msg=msg)
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
+
+    return jsonify(cards)
+
+
+@app.route('/card_details_mold')
+def card_details_mold():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Mold';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
+
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
+
+    return jsonify(cards)
+
+
+@app.route('/card_details_die_prep')
+def card_details_die_prep():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Die Prep';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
+
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
+
+    return jsonify(cards)
+
+
+@app.route('/card_details_die_attached')
+def card_details_die_attached():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("""
+                    SELECT 
+                        t1.id,
+                        t1.device_id,
+                        t1.status,
+                        t1.operator,
+                        t1.assigned_gl,
+                        t1.operation_code,
+                        t1.operation,
+                        t1.area
+                    FROM machine_data_tbl t1
+                    INNER JOIN (
+                    SELECT device_id, MAX(id) AS max_id
+                    FROM machine_data_tbl
+                    GROUP BY device_id
+                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Die Attach';
+                   """)
+    card_data = cursor.fetchall()
+    cursor.close()
+
+    # Convert data to a list of dictionaries
+    cards = []
+    for row in card_data:
+        card = {
+            'id': row[0],
+            'device_id': row[1],
+            'status': row[2],
+            'operator': row[3],
+            'assigned_gl': row[4],
+            'operation_code': row[5],
+            'operation': row[6],
+            'area': row[7]
+        }
+        cards.append(card)
+
+    return jsonify(cards)
 
 
 @app.route('/machines/delete', methods=['POST'])
@@ -719,74 +700,60 @@ def get_max_inputs():
     print(data)
     return jsonify(data=data)
 
+
 @app.route('/insert_ip_data', methods=['POST'])
 def insert_ip_data():
-    fetched_ip = request.json["fetched_ip"]
-    status = request.json["status"]
-    print('FETCHED HERE', fetched_ip, status)
-    
-    # Check if the fetched_ip already exists in the database
-    cur.execute("SELECT COUNT(*) FROM public.fetched_ip_tbl WHERE fetched_ip = %s", (fetched_ip,))
-    if cur.fetchone()[0] > 0:
-        # If it does, return an error response
-        return jsonify("Data already exists in the database")
-    else:
-        return jsonify("Data already exists in the database")
-
-    if status == 'CONNECTED':
-        cur.execute(f"UPDATE public.fetched_ip_tbl SET status='{status}' WHERE fetched_ip='{fetched_ip}'")
-        conn.commit()
-        print("Data Updated successfully into the database")
-    else:
-        # If it doesn't, insert the data into the database
-        cur.execute("INSERT INTO public.fetched_ip_tbl (fetched_ip, status) VALUES (%s, %s)", (fetched_ip, status))
-        conn.commit()
+    try:
+        machine_name = request.json["machine_name"]
+        remove_py = re.sub('.py','',machine_name)
+        fetched_ip = request.json["fetched_ip"]
+        status = request.json["status"]
+        fetched_sid = request.json["fetched_sid"]
+        print('tessstt', request.json)
+        print('FETCHED HERE', fetched_ip, status, remove_py)
+        cur.execute("INSERT INTO public.fetched_ip_tbl (fetched_ip, status, sid, machine_name) VALUES (%s, %s, %s, %s)",
+                    (fetched_ip, status, fetched_sid, remove_py))
+        conn.commit()  # commit the transaction
         print("Data inserted successfully into the database")
-    return jsonify("Data inserted successfully into the database")
-
-
-@app.route('/disconnect_ip_data', methods=['POST'])
-def disconnect_ip_data():
-    fetched_ip = request.json["fetched_ip"]
-    status = request.json["status"]
-    print('FETCHED HERE', status)
-    cur.execute(f"UPDATE public.fetched_ip_tbl SET fetched_ip='{fetched_ip}', status='{status}' WHERE fetched_ip='{fetched_ip}'")
-    conn.commit()
-    print("Data Updated successfully")
-    return jsonify("Data Updated successfully")
+        return jsonify("Data inserted successfully into the database")
+    except Exception as e:
+        conn.rollback()  # rollback the transaction if an error occurs
+        print("An error occurred while inserting data:", e)
+        return jsonify("An error occurred while inserting data")
 
 
 ## SOCKET IO CONNECTION ##
-@socketio.on('connect')
-def handle_connect():
+
+@socketio.on('client_connected')
+def handle_client_connected(data):
     client_ip = request.remote_addr
-    status = 'CONNECTED'
-    clients[request.sid] = client_ip
-    emit('client_connected', {'ip': client_ip,  'status': status}, broadcast=True)
-    print('Client connected', client_ip)
+    print('Client connected:', request.sid, client_ip)
+    machine_name = data['machine_name']
+    print(f"Client with SID {request.sid} connected with machine name {machine_name}")
+    # Send a response event back to the client
+    socketio.emit('server_response', {'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name})
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    ip = clients.pop(request.sid, None)
-    status = 'CONNECTED'
-    if ip:
-        emit('client_disconnected', {'ip': ip, 'status': status}, broadcast=True)
-    print('Client disconnected', ip)
-
-@socketio.on('message')
-def handle_message(message):
+    status = 'DISCONNECTED'
     client_ip = request.remote_addr
-    print(message)
-    print(f'Received message from {client_ip}: {message}')
-    emit('response', f'Server received message from {client_ip}: ' + message)
+    client_sid = request.sid
+    print('Client disconnected:', client_ip, client_sid)
+    cur.execute(
+        f"UPDATE public.fetched_ip_tbl SET status='{status}' WHERE sid='{client_sid}'")
+    conn.commit()
+    # print("Data Updated successfully")
+    socketio.emit('client_disconnected', {
+                  'message': 'DISCONNECTED', 'sid': request.sid, 'client_ip': client_ip})
+
 
 @socketio.on('data')
-def handle_data(data, stat_var, uID):
+def handle_data(data, stat_var, uID, machine_name):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     client_ip = request.remote_addr
     print(f'Received data from {client_ip}: {data}')
     emit('response', f'Server received data from {client_ip}: ' + str(data))
-    
+
     print(data['operator'])
     print(data['assigned_gl'])
     print(data['operation_code'])
@@ -794,10 +761,11 @@ def handle_data(data, stat_var, uID):
     print(data['area'])
     print(stat_var)
     print(uID)
-    
+    print(machine_name)
+
     try:
-        cur.execute("INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area) VALUES (%s, %s, %s, %s, %s, %s, %s)", 
-                    (uID, stat_var, data['operator'],data['assigned_gl'],data['operation_code'],data['operation'],data['area']))
+        cur.execute("INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area, machine_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    (uID, stat_var, data['operator'], data['assigned_gl'], data['operation_code'], data['operation'], data['area'], machine_name))
         conn.commit()
         print("Data inserted successfully into the database")
         return jsonify("Data inserted successfully into the database")
@@ -807,18 +775,20 @@ def handle_data(data, stat_var, uID):
         return jsonify("Error inserting data into the database:", e)
     finally:
         cur.close()
-    
+
+
 @socketio.on('stop_data')
 def handle_data(stat_var, uID):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     client_ip = request.remote_addr
     print(f'Received data from {client_ip}')
     emit('response', f'Server received data from {client_ip}: ')
-    
+
     print(stat_var)
-    
+
     try:
-        cur.execute(f"UPDATE public.machine_data_tbl SET status='{stat_var}' WHERE device_id='{uID}'")
+        cur.execute(
+            f"UPDATE public.machine_data_tbl SET status='{stat_var}' WHERE device_id='{uID}'")
         conn.commit()
         print("Data inserted successfully into the database")
         return jsonify("Data inserted successfully into the database")
@@ -828,7 +798,7 @@ def handle_data(stat_var, uID):
         return jsonify("Error inserting data into the database:", e)
     finally:
         cur.close()
-        
+
 
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
@@ -837,11 +807,7 @@ def handle_data(stat_var, uID):
 def index():
     print('Go to Index')
     program_manager = ProgramManager()
-    count_machines = program_manager.count_total_machine()
-    count_machines_running = program_manager.count_total_machine_running()
-    count_machines_stopped = program_manager.count_total_machine_stopped()
-    return render_template('home.html', count_machines=count_machines,
-                           count_machines_running=count_machines_running, count_machines_stopped=count_machines_stopped)
+    return render_template('home.html')
 
 
 @app.route('/data_table')
@@ -860,7 +826,8 @@ def view_programs():
 @app.route('/all_device')
 def all_device():
     print('Go to All Devices')
-    return render_template('layout-vertical-1-column.html')
+    return render_template('controllers-area-view.html')
+
 
 @app.route('/configuration')
 def configuration():
@@ -874,9 +841,9 @@ def machine_uph():
     return render_template('machine_uph.html')
 
 
-@app.route('/captured_time')
-def captured_time():
-    print('Go to Capture Time')
+@app.route('/captured_data')
+def captured_data():
+    print('Go to Capture Data')
     return render_template('captured_time.html')
 
 
@@ -885,6 +852,38 @@ def logout():
     # Clear the session and redirect to the login page
     session.clear()
     return redirect(url_for('login', success=True))
+
+# ROUTE TO AREAS#
+
+
+@app.route('/mold')
+def mold():
+    return render_template('areas/controllers-area-view-mold.html')
+
+
+@app.route('/wirebond')
+def wirebond():
+    return render_template('areas/controllers-area-view-wirebond.html')
+
+
+@app.route('/die-prep')
+def die_prep():
+    return render_template('areas/controllers-area-view-die-prep.html')
+
+
+@app.route('/die-attached')
+def die_attached():
+    return render_template('areas/controllers-area-view-die-attached.html')
+
+
+@app.route('/eol1')
+def eol1():
+    return render_template('areas/controllers-area-view-eol1.html')
+
+
+@app.route('/eol2')
+def eol2():
+    return render_template('areas/controllers-area-view-eol2.html')
 
 
 if __name__ == '__main__':

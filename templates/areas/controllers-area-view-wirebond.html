@@ -2,11 +2,11 @@
 <html>
 
 <head>
-    <title>Example</title>
+    <title>Wirebond</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'assets/css/main/app.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/main/app-dark.css') }}"/>
-    <link rel="shortcut icon" href="{{ url_for('static', filename = 'assets/images/logo/favicon.svg') }}"
+    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
           type="image/x-icon"/>
     <link rel="shortcut icon" href="{{ url_for('static', filename = 'assets/images/logo/favicon.png') }}"
           type="image/png"/>
@@ -37,7 +37,7 @@
 <!-- <script src="{{ url_for('static', filename = 'assets/js/pages/ui-apexchart.js') }}"></script>-->
 <!-- Add the following script tags to your HTML templates -->
 
-<script src="{{ url_for('static', filename = 'assets/js/device.js') }}"></script>
+<script src="{{ url_for('static', filename = 'assets/js/areas_js/controllers-area-wirebond.js') }}"></script>
 <!-- <script src="{{ url_for('static', filename = 'assets/js/radial-counter.js') }}"></script>-->
 </body>
 
