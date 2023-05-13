@@ -24,7 +24,7 @@ $(document).ready(function () {
 
                     // Create a unique ID for the timer based on the item ID
                     var timerID = 'timer-' + item.id;
-                    console.log(item.operator)
+                    console.log(item.operator, item.port, )
                     // var machine_id = item.id
                     // var date_here = item.end_time;
                     // var duration = item.duration;
@@ -36,13 +36,13 @@ $(document).ready(function () {
 
                     body += '<div class="col-lg-4"><div class="card card-margin ' + stat + '">'
                         + '<div class="card-header no-border">'
-                        + '<h5 class="card-title text-dark" style="text-transform:uppercase;" >' + item.device_id + '</h5>'
+                        + '<h5 class="card-title text-dark" style="text-transform:uppercase;" >' + item.port + '</h5>'
                         + '</div>'
                         + '<div class="card-body pt-0">'
                         + '<div class="widget-49">'
                         + '<div class="widget-49-title-wrapper">'
                         + '<div class="widget-49-date-primary">'
-                        + '<span class="widget-49-date-day text-' + text_color + '">' + item.id + '</span>'
+                        + '<span class="widget-49-date-day text-' + text_color + '">' + item.item_id + '</span>'
                         + '</div>'
                         + '<div class="widget-49-meeting-info">'
                         + '<span class="widget-49-pro-title text-dark">' + item.operation_code + '</span>'

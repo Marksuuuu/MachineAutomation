@@ -153,13 +153,14 @@ def login():
 def get_machines():
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT MAX(id) AS id, fetched_ip FROM fetched_ip_tbl GROUP BY fetched_ip;")
+        "SELECT MAX(id) AS id, fetched_ip, controller_name FROM fetched_ip_tbl GROUP BY fetched_ip, controller_name;")
     rows = cursor.fetchall()
     machines = []
     for row in rows:
         machines.append({
             'id': row[0],
-            'fetched_ip': row[1]
+            'fetched_ip': row[1],
+            'controller_name': row[2]
         })
     cursor.close()
     return jsonify({'data': machines})
@@ -205,7 +206,9 @@ def get_name():
                        status, 
                        sid,
                        port,
-                       machine_name
+                       machine_name,
+                       area,
+                       controller_name
                        FROM 
                        public.fetched_ip_tbl
                        WHERE
@@ -226,13 +229,38 @@ def insert_machine_name():
     cursor = conn.cursor()
     form_id = request.form['id']
     machine_name = request.form['machine_name_var']
+    area_var = request.form['area_var']
     cursor.execute(f"""UPDATE 
                    public.fetched_ip_tbl
-                   SET machine_name = '{machine_name}'
+                   SET machine_name = '{machine_name}',
+                   area = '{area_var}'
                    WHERE id = '{form_id}'""")
     conn.commit()
     cursor.close()
-    return jsonify({'success': True})
+    data = {
+        'form_id': form_id,
+        'machine_name': machine_name,
+        'area_var': area_var
+    }
+    return jsonify({'data': data})
+
+@app.route('/insert_controller', methods=['POST'])
+def insert_controller():
+    cursor = conn.cursor()
+    form_ip = request.form['ip']
+    controller_name_var = request.form['controller_name_var']
+    cursor.execute(f"""UPDATE 
+                   public.fetched_ip_tbl
+                   SET controller_name = '{controller_name_var}'
+                   WHERE fetched_ip = '{form_ip}'""")
+    conn.commit()
+    cursor.close()
+    data = {
+        'form_ip': form_ip,
+        'controller_name_var': controller_name_var,
+        'controller_name_var': controller_name_var
+    }
+    return jsonify({'data': data})
 
 
 @app.route('/card_details_table')
@@ -491,6 +519,18 @@ def card_details_die_prep():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT 
+                    mdt.id,
+                    mdt.area,
+                    fit.port,
+                    fit.controller_name,
+                    mdt.status,
+                    mdt.operator,
+                    mdt.assigned_gl,
+                    mdt.operation_code,
+                    mdt.operation,
+                    mdt.machine_name
+                    FROM(
+                        SELECT 
                         t1.id,
                         t1.device_id,
                         t1.status,
@@ -498,13 +538,17 @@ def card_details_die_prep():
                         t1.assigned_gl,
                         t1.operation_code,
                         t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Die Prep';
+                        t1.area,
+                        t1.machine_name
+                        FROM machine_data_tbl t1
+                        INNER JOIN (
+                            SELECT device_id, MAX(id) AS max_id
+                            FROM machine_data_tbl
+                            GROUP BY device_id
+                        ) t2 ON t1.id = t2.max_id ) as mdt,
+                        public.fetched_ip_tbl as fit
+                        WHERE fit.port = mdt.machine_name
+                        AND mdt.area = 'Die Prep';
                    """)
     card_data = cursor.fetchall()
     cursor.close()
@@ -513,14 +557,17 @@ def card_details_die_prep():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'item_id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
+            
         }
         cards.append(card)
 
@@ -777,7 +824,7 @@ def handle_disconnect():
 
 
 @socketio.on('data')
-def handle_data(data, stat_var, uID, machine_name):
+def handle_data(data, stat_var, uID, result):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     client_ip = request.remote_addr
     print(f'Received data from {client_ip}: {data}')
@@ -790,11 +837,11 @@ def handle_data(data, stat_var, uID, machine_name):
     print(data['area'])
     print(stat_var)
     print(uID)
-    print(machine_name)
+    print(result)
 
     try:
         cur.execute("INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area, machine_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                    (uID, stat_var, data['operator'], data['assigned_gl'], data['operation_code'], data['operation'], data['area'], machine_name))
+                    (uID, stat_var, data['operator'], data['assigned_gl'], data['operation_code'], data['operation'], data['area'], result))
         conn.commit()
         print("Data inserted successfully into the database")
         return jsonify("Data inserted successfully into the database")
