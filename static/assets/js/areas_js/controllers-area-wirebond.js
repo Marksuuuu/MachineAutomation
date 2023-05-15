@@ -9,10 +9,10 @@ $(document).ready(function () {
                     var machine_status = item.status;
                     var body = '';
                     var text_color = '';
-                    if (machine_status == "STARTED") {
+                    if (machine_status == "CONNECTED") {
                         stat = 'bg-success';
                         text_color = 'success'
-                    } else if (machine_status == 'STOP') {
+                    } else if (machine_status == 'DISCONNECTED') {
                         stat = 'bg-danger';
                         text_color = 'danger'
                     } else if (machine_status == 'IDLE') {
@@ -24,7 +24,7 @@ $(document).ready(function () {
 
                     // Create a unique ID for the timer based on the item ID
                     var timerID = 'timer-' + item.id;
-                    console.log(item.operator)
+                    console.log(item.operator, item.port, )
                     // var machine_id = item.id
                     // var date_here = item.end_time;
                     // var duration = item.duration;
@@ -35,8 +35,10 @@ $(document).ready(function () {
                     // var elapsedTime = storedData ? storedData.elapsedTime : 0;
 
                     body += '<div class="col-lg-4"><div class="card card-margin ' + stat + '">'
-                        + '<div class="card-header no-border">'
-                        + '<h5 class="card-title text-dark" style="text-transform:uppercase;" >' + item.device_id + '</h5>'
+                        + '<div class="card-header no-border" style="font-weight:bold;">'
+                        + '<span class="card-title text-dark" style="text-transform:uppercase; margin-right:170px;">' + item.port + '</span>'
+                        + '&nbsp; &nbsp;  &nbsp;'
+                        + '<span class="card-title text-dark" style="text-transform:uppercase;" >' + item.controller_name + '</span>'
                         + '</div>'
                         + '<div class="card-body pt-0">'
                         + '<div class="widget-49">'

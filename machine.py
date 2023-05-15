@@ -336,14 +336,16 @@ def get_card_details():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -354,22 +356,22 @@ def get_card_details():
 def card_details_wirebond():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Wirebond';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Wirebond' OR fit.area = 'wirebond'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -377,14 +379,16 @@ def card_details_wirebond():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -395,22 +399,22 @@ def card_details_wirebond():
 def card_details_eol1():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'EOL1';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Eol1' OR fit.area = 'eol1'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -418,14 +422,16 @@ def card_details_eol1():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -436,22 +442,22 @@ def card_details_eol1():
 def card_details_eol2():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'EOL2';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Eol2' OR fit.area = 'eol2'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -459,14 +465,16 @@ def card_details_eol2():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -477,22 +485,22 @@ def card_details_eol2():
 def card_details_mold():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Mold';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Mold' OR fit.area = 'mold'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -500,14 +508,16 @@ def card_details_mold():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -518,38 +528,22 @@ def card_details_mold():
 def card_details_die_prep():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                    mdt.id,
-                    mdt.area,
-                    fit.port,
-                    fit.controller_name,
-                    mdt.status,
-                    mdt.operator,
-                    mdt.assigned_gl,
-                    mdt.operation_code,
-                    mdt.operation,
-                    mdt.machine_name
-                    FROM(
-                        SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area,
-                        t1.machine_name
-                        FROM machine_data_tbl t1
-                        INNER JOIN (
-                            SELECT device_id, MAX(id) AS max_id
-                            FROM machine_data_tbl
-                            GROUP BY device_id
-                        ) t2 ON t1.id = t2.max_id ) as mdt,
-                        public.fetched_ip_tbl as fit
-                        WHERE fit.port = mdt.machine_name
-                        AND mdt.area = 'Die Prep';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Die Prep' OR fit.area = 'die drep'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -557,7 +551,7 @@ def card_details_die_prep():
     cards = []
     for row in card_data:
         card = {
-            'item_id':row[0],
+            'id':row[0],
             'area':row[1],
             'port':row[2],
             'controller_name':row[3],
@@ -578,22 +572,22 @@ def card_details_die_prep():
 def card_details_die_attached():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT 
-                        t1.id,
-                        t1.device_id,
-                        t1.status,
-                        t1.operator,
-                        t1.assigned_gl,
-                        t1.operation_code,
-                        t1.operation,
-                        t1.area
-                    FROM machine_data_tbl t1
-                    INNER JOIN (
-                    SELECT device_id, MAX(id) AS max_id
-                    FROM machine_data_tbl
-                    GROUP BY device_id
-                    ) t2 ON t1.id = t2.max_id AND t1.area = 'Die Attach';
-                   """)
+                    SELECT
+    fit.id,
+	fit.area,
+	fit.port,
+	fit.controller_name,
+	fit.status,
+	mdt.operator,
+	mdt.assigned_gl,
+	mdt.operation_code,
+	mdt.operation,
+	mdt.machine_name
+FROM
+    public.fetched_ip_tbl AS fit
+    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
+WHERE
+    fit.area = 'Die Attached' OR fit.area = 'die attached'""")
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -601,14 +595,16 @@ def card_details_die_attached():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'device_id': row[1],
-            'status': row[2],
-            'operator': row[3],
-            'assigned_gl': row[4],
-            'operation_code': row[5],
-            'operation': row[6],
-            'area': row[7]
+            'id':row[0],
+            'area':row[1],
+            'port':row[2],
+            'controller_name':row[3],
+            'status':row[4],
+            'operator':row[5],
+            'assigned_gl':row[6],
+            'operation_code':row[7],
+            'operation':row[8],
+            'machine_name':row[9],
         }
         cards.append(card)
 
@@ -772,7 +768,7 @@ def insert_ip_data():
         fetched_sid = request.json["fetched_sid"]
 
         cur.execute(
-            "SELECT COUNT(machine_name) FROM public.fetched_ip_tbl WHERE port = %s", (remove_py,))
+            "SELECT COUNT(port) FROM public.fetched_ip_tbl WHERE port = %s", (remove_py,))
         count = cur.fetchone()[0]
 
         if count > 0:

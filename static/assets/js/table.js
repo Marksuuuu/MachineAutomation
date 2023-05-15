@@ -59,7 +59,10 @@ $(document).ready(function () {
           $('#controller_ip').html(fetchedIp); // Set the value of the #controller_ip element to the fetchedIp value
 
           var controller_name = ''; // Initialize controller_name variable
+          var controller_id = ''; // Initialize controller_name variable
           for (var i = 0; i < data.length; i++) {
+            fetchedIp = data[i][1];
+            controller_id = data[i][0]; // Set id to the current value
             controller_name = data[i][7]; // Set controller_name to the current value
             break;
           }
@@ -71,7 +74,7 @@ $(document).ready(function () {
               var addControllerInputGroup = '<div id="inputGroup">'
                 + '<div class="input-group mb-3">'
                 + '<input type="text" class="form-control" placeholder="" id="controller_name" aria-describedby="add-controller-name">'
-                + '<button class="btn btn-primary add-controller" type="button" id="add-controller-name" data-ip=' + fetchedIp + '>Add Controller</button>'
+                + '<button class="btn btn-primary add-controller" type="button" id="add-controller-name" data-ip=' + fetchedIp + '>Controller</button>'
                 + '</div></div>';
               $(addControllerInputGroup).insertAfter("#controller_ip");
 
@@ -117,15 +120,66 @@ $(document).ready(function () {
             // If controller_name is not null, update the existing controller_span element
             var controllerSpanExists = $('#controller_span').children().length > 0;
             if (!controllerSpanExists) {
-              var span = $('<h5>').text('Controller name : ' + controller_name);
-              var controller_span = $('<div>').attr('id', 'controller_span').append(span);
+              var span_controller = '<span>Controller name : ' + controller_name + '</span>';
+              var controller_button  = '<button type="button" class="btn btn-outline-primary edit-controller-btn" data-id="' + controller_id + '">Edit</button>'
+              var controller_span = $('<div>').attr('id', 'controller_span').append(span_controller);
+              var button_class = $('<div>').attr('id', 'button_class').append(controller_button);
               $(controller_span).insertAfter("#controller_ip");
+              $(button_class).insertAfter("#controller_span");
             } else {
               $('#controller_span').children().text('Controller name : ' + controller_name);
             }
             $('#controller_name').replaceWith('');
             $('#add-controller-name').replaceWith('');
           }
+
+          $('.edit-controller-btn').click(function () {
+            $("#controller_span").html('');
+            var saveEdittedController = '<div id="inputGroup">'
+                + '<div class="input-group mb-3">'
+                + '<input type="text" class="form-control" placeholder="" id="controller_name" aria-describedby="add-controller-name">'
+                + '<button class="btn btn-primary add-controller" type="button" id="add-controller-name" data-ip=' + fetchedIp + '>Controller</button>'
+                + '</div></div>';
+            $('#controller_span').append(saveEdittedController)
+            $('#button_class').html('')
+
+            $('#add-controller-name').click(function () {
+              var ip = $(this).data('ip');
+              var controller_name_var = $('#controller_name').val()
+              if (controller_name_var == '') {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Error',
+                  text: 'Enter you must something!.',
+                  showConfirmButton: true,
+                })
+
+              } else {
+                console.log('Clicked on button with IP:', ip, controller_name_var);
+                $.ajax({
+                  url: '/insert_controller',
+                  method: 'POST',
+                  data: {
+                    ip: ip,
+                    controller_name_var: controller_name_var
+                  },
+                  success: function (response) {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Successfully saved!',
+                      text: 'Controller Updated!',
+                      showConfirmButton: true,
+                    })
+
+                    $('#myModal').modal('hide');
+                    table.ajax.reload();
+                  }
+                });
+
+              }
+            });
+          });
+
 
           console.log("🚀 ~ file: table.js:82 ~ fetched_result:", controller_name)
           var html = '';
@@ -136,7 +190,7 @@ $(document).ready(function () {
             var port = data[i][4]; // Accessing port
             var machine_name = data[i][5]; // Accessing machine_name
             var area = data[i][6]; // Accessing area
-            var controller_name = data[i][7];
+            var controller_name = data[i][7]; // Accessing controller_name
 
             var input_machine_name = '<input type="text" id="machine_name_var" class="form-control" aria-describedby="save-btn">';
             var input_area = '<input type="text" class="form-control" id="area_var" aria-describedby="save-btn">';
@@ -206,7 +260,6 @@ $(document).ready(function () {
       }
     });
   });
-
 
   $('#machine_result_id tbody').on('click', '.edit-btn', function () {
     var row = $(this).closest('tr');
@@ -292,20 +345,3 @@ $(document).ready(function () {
 
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
