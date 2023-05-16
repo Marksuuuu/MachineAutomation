@@ -615,7 +615,7 @@ WHERE
 def delete_machine():
     cursor = conn.cursor()
     id = request.form['id']
-    cursor.execute("DELETE FROM machine_tbl WHERE id = %s", (id,))
+    cursor.execute("DELETE FROM fetched_ip_tbl WHERE id = %s", (id,))
     conn.commit()
     cursor.close()
     return jsonify({'success': True})
