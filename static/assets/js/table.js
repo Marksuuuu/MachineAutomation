@@ -106,7 +106,7 @@ $(document).ready(function () {
                         showConfirmButton: true,
                       })
 
-                      $('#myModal').modal('hide');
+                      // $('#myModal').modal('hide');
                       table.ajax.reload();
                     }
                   });
@@ -184,7 +184,7 @@ $(document).ready(function () {
                       showConfirmButton: true,
                     });
 
-                    $('#myModal').modal('hide');
+                    // $('#myModal').modal('hide');
                     table.ajax.reload();
                   }
                 });
@@ -282,7 +282,7 @@ $(document).ready(function () {
     var buttonReplace = row.find('td:nth-child(7)');
     inputMachineNameTd.html('<input type="text" class="form-control" id="machine_name_var" value="' + inputMachineNameTd.text() + '">');
     inputAreaTd.html('<input type="text" class="form-control" id="area_var" value="' + inputAreaTd.text() + '">');
-    buttonReplace.html('<button type="button" class="icon dripicons btn dripicons-plus btn btn-outline-primary save-btn" data-id="' + id + '">');
+    buttonReplace.html('<button type="button" id="edit" class="icon dripicons btn dripicons-plus btn btn-outline-primary save-btn" data-id="' + id + '">');
   });
 
   $('#machine_result_id tbody').on('click', '.save-btn', function () {
@@ -314,7 +314,9 @@ $(document).ready(function () {
             text: 'Succesfully Saved!.',
           })
           $('#default').modal('hide');
-          $('#myModal').modal('hide');
+          console.log('dataaaaa', data)
+          $('#machine_name_var').replaceWith(machine_name_var);
+          $('#area_var').replaceWith(area_var);
         }
       });
     }

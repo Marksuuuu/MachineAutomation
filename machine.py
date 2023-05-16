@@ -872,6 +872,8 @@ def handle_data(stat_var, uID):
         cur.close()
 
 
+
+
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##
 
 
