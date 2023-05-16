@@ -121,13 +121,25 @@ $(document).ready(function () {
             var controllerSpanExists = $('#controller_span').children().length > 0;
             if (!controllerSpanExists) {
               var span_controller = '<span>Controller name : ' + controller_name + '</span>';
-              var controller_button  = '<button type="button" class="btn btn-outline-primary edit-controller-btn" data-id="' + controller_id + '">Edit</button>'
+              var controller_button = '<button type="button" class="btn btn-outline-primary edit-controller-btn" data-id="' + controller_id + '">Edit</button>'
               var controller_span = $('<div>').attr('id', 'controller_span').append(span_controller);
               var button_class = $('<div>').attr('id', 'button_class').append(controller_button);
               $(controller_span).insertAfter("#controller_ip");
               $(button_class).insertAfter("#controller_span");
             } else {
               $('#controller_span').children().text('Controller name : ' + controller_name);
+              var editButton = $('<button>').attr('type', 'button').addClass('btn btn-outline-primary edit-controller-btn').attr('data-id', controller_id).text('Edit');
+              // Check if the button already exists before adding it
+              if ($('#button_class').find('.edit-controller-btn').length === 0) {
+                $('#controller_span').children().text('Controller name: ' + controller_name);
+                var editButton = $('<button>')
+                  .attr('type', 'button')
+                  .addClass('btn btn-outline-primary edit-controller-btn')
+                  .attr('data-id', controller_id)
+                  .text('Edit');
+                $('#button_class').append(editButton);
+              }
+
             }
             $('#controller_name').replaceWith('');
             $('#add-controller-name').replaceWith('');
@@ -135,25 +147,26 @@ $(document).ready(function () {
 
           $('.edit-controller-btn').click(function () {
             $("#controller_span").html('');
-            var saveEdittedController = '<div id="inputGroup">'
-                + '<div class="input-group mb-3">'
-                + '<input type="text" class="form-control" placeholder="" id="controller_name" aria-describedby="add-controller-name">'
-                + '<button class="btn btn-primary add-controller" type="button" id="add-controller-name" data-ip=' + fetchedIp + '>Controller</button>'
-                + '</div></div>';
-            $('#controller_span').append(saveEdittedController)
-            $('#button_class').html('')
+
+            var saveEdittedController = $('<div id="inputGroup">')
+              .append($('<div class="input-group mb-3">')
+                .append($('<input type="text" class="form-control" placeholder="" id="controller_name" aria-describedby="add-controller-name">'))
+                .append($('<button class="btn btn-primary add-controller" type="button" id="add-controller-name">Controller</button>').data('ip', fetchedIp)));
+
+            $('#controller_span').append(saveEdittedController);
+            $('#button_class').html('');
 
             $('#add-controller-name').click(function () {
               var ip = $(this).data('ip');
-              var controller_name_var = $('#controller_name').val()
-              if (controller_name_var == '') {
+              var controller_name_var = $('#controller_name').val();
+
+              if (controller_name_var === '') {
                 Swal.fire({
                   icon: 'warning',
                   title: 'Error',
-                  text: 'Enter you must something!.',
+                  text: 'You must enter something!',
                   showConfirmButton: true,
-                })
-
+                });
               } else {
                 console.log('Clicked on button with IP:', ip, controller_name_var);
                 $.ajax({
@@ -169,13 +182,12 @@ $(document).ready(function () {
                       title: 'Successfully saved!',
                       text: 'Controller Updated!',
                       showConfirmButton: true,
-                    })
+                    });
 
                     $('#myModal').modal('hide');
                     table.ajax.reload();
                   }
                 });
-
               }
             });
           });
