@@ -4,8 +4,9 @@
 <head>
     <title>Wirebond</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'assets/css/main/app.css') }}"/>
+   <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'assets/css/main/app.css') }}"/>-->
     <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/main/app-dark.css') }}"/>
+    
     <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
           type="image/x-icon"/>
     <link rel="shortcut icon" href="{{ url_for('static', filename = 'assets/images/logo/favicon.png') }}"
@@ -13,11 +14,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/pages/layout-device-template.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/shared/iconly.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/pages/radial-counter.css') }}"/>
-    <style>
+ <!--   <style>
         .container{
-            max-width: 1800px;
+            max-width: 100%;
         }
-    </style>
+    </style>-->
 </head>
 
 
@@ -30,7 +31,7 @@
     </div>
 </nav>
 <div class="container">
-    <div class="row device_row">
+    <div class="row">
 
     </div>
 </div>

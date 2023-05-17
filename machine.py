@@ -149,7 +149,7 @@ def login():
         return render_template('auth-login.html')
 
 
-@app.route('/machines')
+@app.route('/machines') 
 def get_machines():
     cursor = conn.cursor()
     cursor.execute(
@@ -346,6 +346,7 @@ def get_card_details():
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 
@@ -357,7 +358,7 @@ def card_details_wirebond():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -366,7 +367,8 @@ def card_details_wirebond():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -389,6 +391,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 
@@ -400,7 +403,7 @@ def card_details_eol1():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -409,7 +412,8 @@ def card_details_eol1():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -432,6 +436,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 
@@ -443,7 +448,7 @@ def card_details_eol2():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -452,7 +457,8 @@ def card_details_eol2():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -475,6 +481,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 
@@ -486,7 +493,7 @@ def card_details_mold():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -495,7 +502,8 @@ def card_details_mold():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -518,6 +526,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 
@@ -529,7 +538,7 @@ def card_details_die_prep():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -538,7 +547,8 @@ def card_details_die_prep():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -561,6 +571,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
             
         }
         cards.append(card)
@@ -573,7 +584,7 @@ def card_details_die_attached():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
                     SELECT
-    fit.id,
+     fit.id,
 	fit.area,
 	fit.port,
 	fit.controller_name,
@@ -582,7 +593,8 @@ def card_details_die_attached():
 	mdt.assigned_gl,
 	mdt.operation_code,
 	mdt.operation,
-	mdt.machine_name
+	mdt.machine_name,
+    fit.machine_name as machine
 FROM
     public.fetched_ip_tbl AS fit
     LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
@@ -605,6 +617,7 @@ WHERE
             'operation_code':row[7],
             'operation':row[8],
             'machine_name':row[9],
+            'machine': row[10]
         }
         cards.append(card)
 

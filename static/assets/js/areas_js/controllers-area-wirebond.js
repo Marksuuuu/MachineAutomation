@@ -9,102 +9,156 @@ $(document).ready(function () {
                     var machine_status = item.status;
                     var body = '';
                     var text_color = '';
+                    var moStatus = '';
+                    var effciencyStatus = '';
+                    var ooeStatus = '';
+                    var operatorStatus = '';
+                    var qtyToProccessStatus = '';
+                    var startTimeStatus = '';
+                    var totalRunningTime = '';
+                    var idleTime = '';
+                    var currentDate = new Date();
+                    var currentYear = currentDate.getFullYear(); // Get the current year (e.g., 2023)
+                    var currentMonth = currentDate.getMonth(); // Get the current month (0-11, where 0 represents January)
+                    var currentDay = currentDate.getDate(); // Get the current day of the month (1-31)
+                    var currentHours = currentDate.getHours(); // Get the current hour (0-23)
+                    var currentMinutes = currentDate.getMinutes(); // Get the current minute (0-59)
+                    var currentSeconds = currentDate.getSeconds(); // Get the current second (0-59)
+
+                    var formattedDateTime = currentYear + '-' + (currentMonth + 1) + '-' + currentDay + ' ' + currentHours + ':' + currentMinutes + ':' + currentSeconds;
+
+
                     if (machine_status == "CONNECTED") {
-                        stat = 'bg-success';
+                        stat = 'active-no-running';
                         text_color = 'success'
-                    } else if (machine_status == 'DISCONNECTED') {
-                        stat = 'bg-danger';
+                        moStatus = '--';
+                        effciencyStatus = '--';
+                        ooeStatus = '--';
+                        operatorStatus = '--';
+                        qtyToProccessStatus = '--';
+                        startTimeStatus = '--';
+                        totalRunningTime = '--';
+                        idleTime = '--';
+                    }else if (machine_status == "DISCONNECTED") {
+                        stat = 'disconnected';
+                        text_color = 'success'
+                        moStatus = '--';
+                        effciencyStatus = '--';
+                        ooeStatus = '--';
+                        operatorStatus = '--';
+                        qtyToProccessStatus = '--';
+                        startTimeStatus = '--';
+                        totalRunningTime = '--';
+                        idleTime = '--';
+                    } else if (machine_status == 'DOWN') {
+                        stat = 'down';
                         text_color = 'danger'
+                        moStatus = '--';
+                        effciencyStatus = '--';
+                        ooeStatus = '--';
+                        operatorStatus = '--';
+                        qtyToProccessStatus = '--';
+                        startTimeStatus = '--';
+                        totalRunningTime = '--';
+                        idleTime = '--';
+                    } else if (machine_status == 'ACTIVE_RUNNING') {
+                        stat = 'active-running';
+                        text_color = 'danger'
+                        moStatus = 'MO-0003';
+                        effciencyStatus = '40%';
+                        ooeStatus = '50%';
+                        operatorStatus = '10450';
+                        qtyToProccessStatus = '600pcs';
+                        startTimeStatus = formattedDateTime;
+                        totalRunningTime = currentHours + ' Hours';
+                        idleTime = '--';
+                    } else if (machine_status == 'ACTIVE_MO_RUNNING') {
+                        stat = 'idle-active-mo';
+                        text_color = 'danger'
+                        moStatus = 'MO-0006';
+                        effciencyStatus = '80%';
+                        ooeStatus = '30%';
+                        operatorStatus = '10421';
+                        qtyToProccessStatus = '100pcs';
+                        startTimeStatus = formattedDateTime;
+                        totalRunningTime = (currentHours - 1) + ' Hours';
+                        idleTime = '--';
                     } else if (machine_status == 'IDLE') {
-                        stat = 'bg-primary'
+                        stat = 'idle'
                         text_color = 'primary'
+                        moStatus = '--';
+                        effciencyStatus = '--';
+                        ooeStatus = '--';
+                        operatorStatus = '--';
+                        qtyToProccessStatus = '--';
+                        startTimeStatus = '--';
+                        totalRunningTime = '--';
+                        idleTime = (currentMinutes + 1) + ' Minutes';
                     } else {
                         stat = ''
                     }
-
-                    // Create a unique ID for the timer based on the item ID
-                    var timerID = 'timer-' + item.id;
-                    console.log(item.operator, item.port, )
-                    // var machine_id = item.id
-                    // var date_here = item.end_time;
-                    // var duration = item.duration;
-
-                    // Retrieve start time and elapsed time from local storage if available
-                    // var storedData = JSON.parse(localStorage.getItem(timerID));
-                    // var startTime = storedData ? storedData.startTime : null;
-                    // var elapsedTime = storedData ? storedData.elapsedTime : 0;
-                    body += '<div class="col-md-10 card_class">'
-                         +'<div class="carbon-example flex-wrapper">'
-                         +'<img src="https://www.bootdey.com/image/200x200/FFB6C1/000000" alt="example design logo">'
-                         +'<div class="inner-wrapper">'
-                         +'<p>Test the UX of your website. Diagnose problem areas &amp; prove new designs work.</p>'
-                         +'<p class="fine-print">'
-                         +'ads via Carbon'
-                         +'</p>'
-                         +'</div>'
-                         +'</div>'
-                         +'</div>'
-
-                        //  body += '<div class="col-lg-4"><div class="card card-margin ' + stat + '">'
-                        //  + '<div class="card-header no-border" style="font-weight:bold;">'
-                        //  + '<span class="card-title text-dark" style="text-transform:uppercase; margin-right:170px;">' + item.port + '</span>'
-                        //  + '&nbsp; &nbsp;  &nbsp;'
-                        //  + '<span class="card-title text-dark" style="text-transform:uppercase;" >' + item.controller_name + '</span>'
-                        //  + '</div>'
-                        //  + '<div class="card-body pt-0">'
-                        //  + '<div class="widget-49">'
-                        //  + '<div class="widget-49-title-wrapper">'
-                        //  + '<div class="widget-49-date-primary">'
-                        //  + '<span class="widget-49-date-day text-' + text_color + '">' + item.id + '</span>'
-                        //  + '</div>'
-                        //  + '<div class="widget-49-meeting-info">'
-                        //  + '<span class="widget-49-pro-title text-dark">' + item.operation_code + '</span>'
-                        //  + '<span class="widget-49-meeting-time text-dark">' + item.status + '</span>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '<div class="radial-timer">'
-                        //  + '<div class="radial-timer-bar"></div>'
-                        //  + '<div class="radial-timer-inner">'
-                        //  + '<div class="radial-timer-seconds text-' + text_color + '" id="' + timerID + '">00</div>'
-                        //  + '<div class="radial-timer-label text-' + text_color + '" id="sec">Seconds</div>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '<dl class="widget-49-pro-title text-dark">'
-                        //  + '<dt>OPERATOR</dt>'
-                        //  + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.operator + '</dd>'
-                        //  + '<dt>ASSIGNED GL</dt>'
-                        //  + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.assigned_gl + '</dd>'
-                        //  + '<dt>AREA</dt>'
-                        //  + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.area + '</dd>'
-                        //  + '<dt>OPERATION</dt>'
-                        //  + '<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-' + item.operation + '</dd>'
-                        //  + '</dl>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '</div>'
-                        //  + '</div>';
-
-                 
+                    body += '<div class="carbon-example ' + stat + '">'
+                        + '<span>Status: ' + item.status + '</span><br>'
+                        + '<span id="machine">Machine Name: ' + item.machine + '</span><br><br>'
+                        + '<hr>'
+                        + '<div class="oee-div">'
+                        + '<span>EFFECTIVENESS: '+ effciencyStatus +'</span>'
+                        + '</div>'
+                        + '<hr>'
+                        + '<div class="inner-wrapper ">'
+                        + '<div class="details">'
+                        + '<div>'
+                        + '<dl>'
+                        + '<dt style="font-weight:bold">MO#</dt>'
+                        + '<dd>'+ moStatus +'</dd>'
+                        + '<dt style="font-weight:bold">OPR ID No.</dt>'
+                        + '<dd>'+ operatorStatus +'</dd>'
+                        + '<dt style="font-weight:bold">Qty to Process</dt>'
+                        + '<dd>'+ qtyToProccessStatus +'</dd>'
+                        + '</dl>'
+                        + '</div>'
+                        + '<div class="vl"></div>'
+                        + '<div>'
+                        + '<dl>'
+                        + '<dt style="font-weight:bold">Start time:</dt>'
+                        + '<dd>'+ startTimeStatus +'</dd>'
+                        + '<dt style="font-weight:bold">Total Running Time:</dt>'
+                        + '<dd>'+ totalRunningTime +'</dd>'
+                        + '<dt style="font-weight:bold">Idle time:</dt>'
+                        + '<dd>'+ idleTime +'</dd>'
+                        + '</dl>'
+                        + '</div>'
+                        + '</div>'
+                        + '<hr>'
+                        + '<div class="oee-div">'
+                        + '<span>OEE: '+ ooeStatus +'</span>'
+                        + '</div>'
+                        + '<hr>'
+                        + '<div class="oee-details">'
+                        + '<span>Machine Start time:</span>'
+                        + '<br>'
+                        + '<span>Total Proccesed Quantity:</span>'
+                        + '<br>'
+                        + '<span>Total Uptime:</span>'
+                        + '<br>'
+                        + '<span>Total Idletime:</span>'
+                        + '<br>'
+                        + '<span>Total Dowtime:</span>'
+                        + '</div>'
+                        + '<p class="fine-print">ID: ' + item.id + '</p>'
+                        + '</div>';
 
                     // Add the card to the container element
-                    $('.device_row').append(body);
+                    var row = Math.floor(index / 2); // Calculate the row index
+                    var column = index % 2; // Calculate the column index (values: 0, 1, 2, 3)
 
-                    // Start the timer if the status is 'STARTED'
-                    if (machine_status == 'STOP') {
-                        // var timer = startTimer(timerID, duration, startTime, elapsedTime);
-                        // pauseTimer(timerID, timer)
+                    // Create a new row if necessary
+                    if ($('.row .card-group').eq(row).length === 0) {
+                        $('.row').append('<div class="card-group"></div>');
                     }
-                    if (machine_status == 'IDLE') {
-                        // do nothing
-                    }
-                    else if (machine_status == 'STOP') {
 
-                    } else if (machine_status == 'PAUSE') {
-                        // pauseTimer(timerID, timer)
-                    }
+                    // Append the card to the corresponding row and column
+                    $('.row .card-group').eq(row).append('<div class="column-' + column + '">' + body + '</div>');
                 });
             },
             error: function (xhr, textStatus, errorThrown) {
@@ -113,152 +167,8 @@ $(document).ready(function () {
         });
     }
 
-
-    // // Other initialization code
     fetchAndCreateCards();
     setTimeout(function () {
         window.location.reload();
     }, 100000);
-
-    // var timer = null;
-    // var startTime = null;
-    // var captures = [];
-    // var elapsedTime = 0;
-    // var duration = null;
-
-    // // Load saved data from storage
-    // var savedData = JSON.parse(localStorage.getItem("stopwatchData"));
-    // if (savedData) {
-    //     captures = savedData.captures;
-    //     elapsedTime = savedData.elapsedTime;
-    //     duration = savedData.duration;
-    // }
-
-    // function saveData() {
-    //     // Save data to storage
-    //     localStorage.setItem("stopwatchData", JSON.stringify({
-    //         captures: captures,
-    //         elapsedTime: elapsedTime,
-    //         duration: duration
-    //     }));   
-    // }
-
-    // function formatTime(time) {
-    //     var hours = Math.floor(time / 3600);
-    //     var minutes = Math.floor((time % 3600) / 60);
-    //     var seconds = Math.floor(time % 60);
-    //     return (hours < 10 ? "0" : "") + hours + ":" +
-    //         (minutes < 10 ? "0" : "") + minutes + ":" +
-    //         (seconds < 10 ? "0" : "") + seconds;
-    // }
-
-    // function updateTimer() {
-    //     var currentTime = Date.now();
-    //     elapsedTime += currentTime - startTime;
-    //     startTime = currentTime;
-    //     var formattedTime = formatTime(Math.floor(elapsedTime / 1000));
-    //     $("#timer").text(formattedTime);
-    //     if (duration && elapsedTime >= duration * 1000) {
-    //         clearInterval(timer);
-    //         timer = null;
-    //         $("#message").text("Time's up!");
-    //     }
-    //     saveData(); // Save data after each update
-    // }
-
-    // function startTimer(timerID, duration) {
-    //     var startTime = Date.now();
-    //     console.log('duration', duration)
-    //     var timer = setInterval(function () {
-    //         var elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-
-    //         var seconds = elapsedTime % 60;
-    //         var minutes = Math.floor(elapsedTime / 60) % 60;
-    //         var hours = Math.floor(elapsedTime / 3600);
-    //         var formattedTime =
-    //             (minutes < 10 ? "0" + minutes : minutes) + ":" +
-    //             (seconds < 10 ? "0" + seconds : seconds);
-    //         $("#" + timerID).text(formattedTime);
-    //         if (duration && elapsedTime >= duration) {
-    //             // clearInterval(timer);
-    //             // $("#" + timerID).text("Times UP!");
-    //             // $("#sec").text("");
-    //         }
-    //         if (duration && elapsedTime == duration) {
-    //             console.log('Reached', duration)
-    //             saveData(); // Save data after each tick
-    //         }
-
-    //     }, 1000);
-    //     console.log(timer)
-    //     return timer;
-    // }
-
-    // function pauseTimer(timerID, timer) {
-    //     // clearInterval(timer);
-    //     var capturedTime = $("#" + timerID).text();
-    //     captures.push(capturedTime);
-    //     console.log(capturedTime)
-    //     $("#captures").append("<div>" + capturedTime + "</div>");
-    //     saveData(); // Save data after each capture
-    // }
-
-    // function stopTimer(timerID, timer) {
-    //     clearInterval(timer);
-    //     var capturedTime = $("#" + timerID).text();
-    //     captures.push(capturedTime);
-    //     $("#" + timerID).text("00:00");
-    //     $("#captures").append("<div>" + capturedTime + "</div>");
-    //     saveData(); // Save data after stopping
-    // }
-
-    // function resetTimer() {
-    //     duration = null;
-    //     elapsedTime = 0;
-    //     $("#" + timerID).text("00:00");
-    //     $("#duration").val("");
-    //     $("#captures").empty();
-    //     $("#message").text("");
-    // }
-
-
-    // function pad(num, size) {
-    //     var s = "" + num;
-    //     return s.substr(s.length - size);
-    // }
-})
-
-// import json
-// from flask import Flask, request
-
-// app = Flask(__name__)
-
-// @app.route('/save_pause', methods=['POST'])
-// def save_pause():
-//     data = json.loads(request.data)
-//     timerID = data['timerID']
-//     pauseTime = data['pauseTime']
-//     elapsedTime = data['elapsedTime']
-
-//     # establish connection to database
-//     conn = psycopg2.connect(database="your_database_name", user="your_username", password="your_password", host="your_host", port="your_port")
-//     cur = conn.cursor()
-
-//     # insert data into database
-//     cur.execute("INSERT INTO paused_time (timer_id, pause_time, elapsed_time) VALUES (%s, %s, %s)", (timerID, pauseTime, elapsedTime))
-//     conn.commit()
-
-//     # close connection to database
-//     cur.close()
-//     conn.close()
-
-//     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-// function pauseTimer(timerID) {
-//     clearInterval(timerInterval);
-
-
-// }
-
-
-
+});
