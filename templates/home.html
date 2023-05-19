@@ -11,7 +11,6 @@
     <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
           type="image/x-icon">
     <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon.png') }}" type="image/png">
-
     <link rel="stylesheet" href="{{url_for('static', filename='assets/css/shared/iconly.css')}}">
 
 </head>
@@ -277,24 +276,8 @@
                      </div>-->
                 </div>
                 <section class="section">
-                    <div class="row" id="table-borderless">
-                        <div class="col-12">
-                            <div class="card overflow-auto">
-                                <div class="table-responsive">
-                                    <table class="table table-borderless mb-0 data-tbl">
-                                        <thead class="text-center">
-                                        <tr>
-                                            <th>IP Address</th>
-                                            <th>Status</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody class="tbody-var">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <span>Message: <p id='message'/></span>
+                    <span>From: <p id='from'/></span>
                 </section>
             </div>
 
@@ -310,7 +293,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
-<script src="{{url_for('static', filename='assets/js/pages/socket-io-data.js') }}"></script>
+<script src="{{url_for('static', filename='assets/js/pages/sample-socketio-data.js') }}"></script>
 </body>
 
 </html>

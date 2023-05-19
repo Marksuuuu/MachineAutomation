@@ -2,8 +2,6 @@ import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
 from flask_socketio import SocketIO, emit
 from datetime import datetime
-from tempfile import NamedTemporaryFile
-import configparser
 import psycopg2
 import psycopg2.extras
 import psutil
@@ -15,34 +13,18 @@ import hashlib
 import requests
 import re
 import os
-import paramiko
-import ipaddress
 import socketio
 import re
 
-
 app = Flask(__name__)
 app.secret_key = 'mark'
-UPLOAD_FOLDER = 'static\\assets\\uploads'
-
 
 clients = {}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 
 socketio = SocketIO(app)
 global running_process
 running_process = None
-
-ALLOWED_EXTENSIONS = {'py'}
-
-
-def allowed_file(filename):
-    for extension in ALLOWED_EXTENSIONS:
-        if '.' in filename and filename.rsplit('.', 1)[1].lower() == extension:
-            return True
-    else:
-        return "<script>alert('Unsupported FIle type') </script>"
 
 
 # Database configuration
@@ -64,28 +46,6 @@ conn = psycopg2.connect(
     password=db_password
 )
 cur = conn.cursor()
-
-
-class Program:
-    def __init__(self, id, name, path):
-        self.id = id
-        self.name = name
-        self.path = path
-
-    def is_running(self):
-        for process in psutil.process_iter():
-            try:
-                if process.name() == 'python.exe' and self.path in process.cmdline():
-                    return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
-        return False
-
-    def run(self):
-        try:
-            subprocess.check_call(['python', self.path])
-        except subprocess.CalledProcessError as e:
-            print(f"Error running {self.name}: {e}")
 
 
 class ProgramManager:
@@ -149,7 +109,7 @@ def login():
         return render_template('auth-login.html')
 
 
-@app.route('/machines') 
+@app.route('/machines')
 def get_machines():
     cursor = conn.cursor()
     cursor.execute(
@@ -223,7 +183,8 @@ def get_name():
         return jsonify(result=result2)
     else:
         return jsonify(result=None)
-    
+
+
 @app.route('/insert_machine_name', methods=['POST'])
 def insert_machine_name():
     cursor = conn.cursor()
@@ -244,6 +205,7 @@ def insert_machine_name():
     }
     return jsonify({'data': data})
 
+
 @app.route('/insert_controller', methods=['POST'])
 def insert_controller():
     cursor = conn.cursor()
@@ -258,7 +220,6 @@ def insert_controller():
     data = {
         'form_ip': form_ip,
         'controller_name_var': controller_name_var,
-        'controller_name_var': controller_name_var
     }
     return jsonify({'data': data})
 
@@ -336,16 +297,16 @@ def get_card_details():
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -381,16 +342,16 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -426,16 +387,16 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -471,16 +432,16 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -516,16 +477,16 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -561,18 +522,18 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
-            
+
         }
         cards.append(card)
 
@@ -607,16 +568,16 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id':row[0],
-            'area':row[1],
-            'port':row[2],
-            'controller_name':row[3],
-            'status':row[4],
-            'operator':row[5],
-            'assigned_gl':row[6],
-            'operation_code':row[7],
-            'operation':row[8],
-            'machine_name':row[9],
+            'id': row[0],
+            'area': row[1],
+            'port': row[2],
+            'controller_name': row[3],
+            'status': row[4],
+            'operator': row[5],
+            'assigned_gl': row[6],
+            'operation_code': row[7],
+            'operation': row[8],
+            'machine_name': row[9],
             'machine': row[10]
         }
         cards.append(card)
@@ -632,143 +593,6 @@ def delete_machine():
     conn.commit()
     cursor.close()
     return jsonify({'success': True})
-
-
-@app.route("/check-ip", methods=['POST'])
-def check_ip():
-    remote_ip_address = request.json["remote_ip_address"]
-    print(remote_ip_address)
-    msg = remote_ip_address
-
-    result = subprocess.run(["ping ", remote_ip_address],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # check if the ping command succeeded (return code is 0)
-    print(result)
-    if not result:
-        msg = f'This {remote_ip_address} are Valid!.'
-        checking = 'FALSE'
-        return jsonify(checking=checking)
-    elif result.returncode == 0:
-        msg = f'This {remote_ip_address} are Invalid!.'
-        checking = 'TRUE'
-        return jsonify(checking=checking)
-    elif result.returncode == '':
-        msg = f'This {remote_ip_address} are Invalid!.'
-        checking = 'FALSE'
-        return jsonify(checking=checking)
-    else:
-        msg = f'This {remote_ip_address} are Invalid!.'
-        checking = 'FALSE'
-        return jsonify(checking=checking)
-    return jsonify('success')
-
-
-@app.route("/check-ip-addcontroller", methods=['POST', 'GET'])
-def check_up_add_controller():
-    config = configparser.ConfigParser()
-    config.read("connection_config.ini")
-    # check if JSON data is valid
-    remote_ip_address = request.form["controllerIp"]
-
-    connection_name = str(remote_ip_address)
-    remote_ip_address = config.get(connection_name, "remote_ip_address")
-    username = config.get(connection_name, "username")
-    password = config.get(connection_name, "password")
-    port = config.getint(connection_name, "port")
-    max_inputs = config.getint(connection_name, "max_inputs")
-
-    # create a new SSH client
-    client = paramiko.SSHClient()
-
-    # automatically add the remote server's host key
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    # connect to the remote server
-    try:
-        client.connect(hostname=remote_ip_address, port=port,
-                       username=username, password=password)
-        print('SUCCESS')
-    except paramiko.AuthenticationException:
-        return jsonify("Authentication failed")
-    except paramiko.SSHException as e:
-        return jsonify(f"Unable to establish SSH connection: {e}")
-
-    directory_path = f'/home/mis/UPLOADS/'
-
-    sftp = client.open_sftp()
-    files = sftp.listdir(directory_path)
-
-    # Print the list of files
-    # print('\nFiles in directory:')
-    data = []
-    # for file in files:
-    #     print(file)
-    data.append({'max_inputs': max_inputs})
-    print(data)
-
-    msg = 'SUCCESS'
-    ip = remote_ip_address
-    return jsonify(data=data)
-
-
-@app.route("/save-connection", methods=["POST"])
-def save_connection():
-    # Get the connection parameters from the request data
-    connection_name = request.json["connection_name"]
-    remote_ip_address = request.json["remote_ip_address"]
-    username = request.json["username"]
-    password = request.json["password"]
-    port = request.json["port"]
-    max_inputs = request.json["max_inputs"]
-
-    # Save the connection parameters to a configuration file
-    config = configparser.ConfigParser()
-    config[connection_name] = {
-        "remote_ip_address": remote_ip_address,
-        "username": username,
-        "password": password,
-        "port": port,
-        "max_inputs": max_inputs
-    }
-    with open("connection_config.ini", "a") as config_file:
-        config.write(config_file)
-    # Return a JSON response with the status message
-    msg = 'Connection configuration saved successfully.'
-    return jsonify(msg=msg)
-
-
-@app.route('/config-datatable', methods=['GET', 'POST'])
-def get_config():
-    config = configparser.ConfigParser()
-    config.read('connection_config.ini')
-
-    data = []
-    for section in config.sections():
-        if config.has_option(section, 'remote_ip_address') and config.has_option(section, 'username') and config.has_option(section, 'password') and config.has_option(section, 'port'):
-            remote_ip_address = config.get(section, 'remote_ip_address')
-            username = config.get(section, 'username')
-            password = config.get(section, 'password')
-            port = config.get(section, 'port')
-            data.append({'remote_ip_address': remote_ip_address,
-                        'username': username, 'password': password, 'port': port})
-    print(data)
-    return jsonify(data=data)
-
-
-@app.route('/get-max-inputs', methods=['POST'])
-def get_max_inputs():
-    config = configparser.ConfigParser()
-    config.read('connection_config.ini')
-
-    data = []
-    for section in config.sections():
-        if config.has_option(section, 'max_inputs') and (section, 'remote_ip_address'):
-            max_inputs = config.get(section, 'max_inputs')
-            remote_ip_address = config.get(section, 'remote_ip_address')
-            data.append({'max_inputs': max_inputs,
-                        'remote_ip_address': remote_ip_address})
-    print(data)
-    return jsonify(data=data)
 
 
 @app.route('/insert_ip_data', methods=['POST'])
@@ -805,6 +629,13 @@ def insert_ip_data():
 
 
 ## SOCKET IO CONNECTION ##
+@socketio.on('client_message')
+def handle_client_message(data):
+    message = data['message']
+    filename_var = data['filename_var']
+    print('Received message:', message)
+    print('Received filename_var:', filename_var)
+    socketio.emit('server_sample_response',{'message': message, 'filename_var': filename_var})
 
 @socketio.on('client_connected')
 def handle_client_connected(data):
@@ -815,7 +646,7 @@ def handle_client_connected(data):
         f"Client with SID {request.sid} connected with machine name {machine_name}")
     # Send a response event back to the client
     socketio.emit('server_response', {
-                  'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name})
+        'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name})
 
 
 @socketio.on('disconnect')
@@ -829,7 +660,7 @@ def handle_disconnect():
     conn.commit()
     # print("Data Updated successfully")
     socketio.emit('client_disconnected', {
-                  'message': 'DISCONNECTED', 'sid': request.sid, 'client_ip': client_ip})
+        'message': 'DISCONNECTED', 'sid': request.sid, 'client_ip': client_ip})
 
 
 @socketio.on('data')
@@ -849,8 +680,10 @@ def handle_data(data, stat_var, uID, result):
     print(result)
 
     try:
-        cur.execute("INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area, machine_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                    (uID, stat_var, data['operator'], data['assigned_gl'], data['operation_code'], data['operation'], data['area'], result))
+        cur.execute(
+            "INSERT INTO machine_data_tbl (device_id, status, operator, assigned_gl, operation_code, operation, area, machine_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (uID, stat_var, data['operator'], data['assigned_gl'], data['operation_code'], data['operation'],
+             data['area'], result))
         conn.commit()
         print("Data inserted successfully into the database")
         return jsonify("Data inserted successfully into the database")
@@ -883,6 +716,8 @@ def handle_data(stat_var, uID):
         return jsonify("Error inserting data into the database:", e)
     finally:
         cur.close()
+
+
 
 
 
@@ -939,6 +774,7 @@ def logout():
     # Clear the session and redirect to the login page
     session.clear()
     return redirect(url_for('login', success=True))
+
 
 # ROUTE TO AREAS#
 
