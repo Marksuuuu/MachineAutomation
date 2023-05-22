@@ -626,9 +626,38 @@ def insert_ip_data():
         conn.rollback()  # rollback the transaction if an error occurs
         print("An error occurred while inserting/updating data:", e)
         return jsonify("An error occurred while inserting/updating data")
+    
+@app.route('/request_data', methods=['POST'])
+def request_data():
+    data = request.get_json()
+    print(data)
+    socketio.emit('dataPassed',{'data':data})
+    return jsonify(data=data)
 
 
 ## SOCKET IO CONNECTION ##
+# Define the event handler for receiving files
+@socketio.on('file_event')
+def receive_file(payload):
+    # Extract the file data and filename from the payload
+    file_data = payload['file_data']
+    filename = payload['filename']
+    remove_py = re.sub('.py', '', filename)
+    fileNameWithIni = 'config_'+ remove_py +'.ini'
+
+    # Generate a unique filename for each received file
+    folder_path = 'downloadConfigs'
+    file_path = f'{folder_path}/{fileNameWithIni}'
+
+    # Process the received file data
+    with open(file_path, 'wb') as file:
+        file.write(file_data)
+
+    # Send a response back to the client
+    socketio.emit('result_response', {'fileNameWithIni': fileNameWithIni})
+    return jsonify(data=fileNameWithIni)
+
+
 @socketio.on('client_message')
 def handle_client_message(data):
     message = data['message']
@@ -716,10 +745,6 @@ def handle_data(stat_var, uID):
         return jsonify("Error inserting data into the database:", e)
     finally:
         cur.close()
-
-
-
-
 
 
 ## ROUTES REDIRECT ONLY TO SPECIFIC PAGES##

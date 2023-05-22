@@ -88,6 +88,5 @@ socket.on('client_disconnected', function (data) {
         html: '<div>IP Address: <strong>' + data.client_ip + '</strong><br>SESSION ID: <strong>' + data.sid + '</strong><br> are Disconnected!. Please Check!</div>'
     })
 
-
 });
 
