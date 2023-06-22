@@ -10,6 +10,8 @@ socket.on('server_response', function (data) {
     console.log("🚀 ~ file: socket-io-data.js:7 ~ status:", status)
     var fetched_sid = data.sid;
     console.log("🚀 ~ file: socket-io-data.js:8 ~ fetched_sid:", fetched_sid)
+    var get_start_date = data.get_start_date
+    console.log("🚀 ~ file: socket-io-data.js:14 ~ get_start_date:", get_start_date)
 
     $.ajax({
         url: "/insert_ip_data",
@@ -18,7 +20,9 @@ socket.on('server_response', function (data) {
             machine_name: machine_name,
             fetched_ip: fetched_ip,
             status: status,
-            fetched_sid: fetched_sid
+            fetched_sid: fetched_sid,
+            get_start_date: get_start_date
+            
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -89,4 +93,6 @@ socket.on('client_disconnected', function (data) {
     })
 
 });
+
+
 

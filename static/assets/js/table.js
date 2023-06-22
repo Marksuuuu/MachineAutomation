@@ -203,7 +203,7 @@ $(document).ready(function () {
             var machine_name = data[i][5]; // Accessing machine_name
             var area = data[i][6]; // Accessing area
             var controller_name = data[i][7]; // Accessing controller_name
-            
+
 
             var input_machine_name = '<input type="text" id="machine_name_var" class="form-control" aria-describedby="save-btn">';
             var input_area = '<input type="text" class="form-control" id="area_var" aria-describedby="save-btn">';
@@ -211,7 +211,7 @@ $(document).ready(function () {
             var buttonIcon = '';
             var buttonStatus = '';
             var buttonClassName = '';
-            
+
 
             if (status === 'CONNECTED') {
               buttonClass = 'btn-outline-success';
