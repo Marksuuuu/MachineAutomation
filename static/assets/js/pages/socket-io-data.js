@@ -22,7 +22,7 @@ socket.on('server_response', function (data) {
             status: status,
             fetched_sid: fetched_sid,
             get_start_date: get_start_date
-            
+
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -92,7 +92,48 @@ socket.on('client_disconnected', function (data) {
         html: '<div>IP Address: <strong>' + data.client_ip + '</strong><br>SESSION ID: <strong>' + data.sid + '</strong><br> are Disconnected!. Please Check!</div>'
     })
 
+    var message = data.message;
+    var sid = data.sid;
+    var client_ip = data.client_ip;
+    var stop_date = data.stop_date;
+    console.log("🚀 ~ file: socket-io-data.js:99 ~ stop_date:", stop_date)
+
+
+
+    $.ajax({
+        url: '/update_ip_data',
+        method: 'POST',
+        data: JSON.stringify({
+            message: message,
+            sid: sid,
+            client_ip: client_ip,
+            stop_date: stop_date,
+
+        }),
+        dataType: "json",
+        contentType: 'application/json; charset=utf-8',
+        success: function () {
+            console.log('SAKSESS')
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 0) {
+            } else if (jqXHR.status === 404) {
+                console.log("🚀 ~ file: socket-io-data.js:125 ~ makeAjaxRequest ~ jqXHR:", jqXHR)
+            } else if (jqXHR.status === 500) {
+                console.log("🚀 ~ file: socket-io-data.js:127 ~ makeAjaxRequest ~ jqXHR:", jqXHR)
+            } else if (textStatus === 'parsererror') {
+                console.log("🚀 ~ file: socket-io-data.js:129 ~ makeAjaxRequest ~ textStatus:", textStatus)
+            } else if (textStatus === 'timeout') {
+                console.log("🚀 ~ file: socket-io-data.js:131 ~ makeAjaxRequest ~ textStatus:", textStatus)
+            } else if (textStatus === 'abort') {
+                console.log("🚀 ~ file: socket-io-data.js:133 ~ makeAjaxRequest ~ textStatus:", textStatus)
+            } else {
+            }
+        }.bind(this) // Bind the error function to preserve context
+    });
+
 });
+
 
 
 

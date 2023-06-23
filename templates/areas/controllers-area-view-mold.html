@@ -1,44 +1,65 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>Mold</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'assets/css/main/app.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/main/app-dark.css') }}"/>
-    <link rel="shortcut icon" href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
-          type="image/x-icon"/>
-    <link rel="shortcut icon" href="{{ url_for('static', filename = 'assets/images/logo/favicon.png') }}"
-          type="image/png"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/pages/layout-device-template.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/shared/iconly.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'assets/css/pages/radial-counter.css') }}"/>
-</head>
+    <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'assets/css/main/app.css') }}"/>-->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename = 'assets/css/main/app-dark.css') }}"
+    />
 
-<body>
-<nav class="navbar navbar-light">
-    <div class="container d-block">
+    <link
+      rel="shortcut icon"
+      href="{{url_for('static', filename='assets/images/logo/icon_main.png') }}"
+      type="image/x-icon"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename = 'assets/images/logo/favicon.png') }}"
+      type="image/png"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename = 'assets/css/pages/layout-device-template.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename = 'assets/css/shared/iconly.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename = 'assets/css/pages/radial-counter.css') }}"
+    />
+    <!--   <style>
+           .container{
+               max-width: 100%;
+           }
+       </style>-->
+  </head>
+
+  <body>
+    <nav class="navbar navbar-light">
+      <div class="container d-block">
         <a href="{{ url_for('index') }}"><i class="bi bi-chevron-left"></i></a>
         <a class="navbar-brand ms-4" href="index.html">
-            <!-- <img src="{{url_for('static', filename='assets/images/logo/logo.svg') }}"> --></a>
+          <!-- <img src="{{url_for('static', filename='assets/images/logo/logo.svg') }}"> --></a
+        >
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row"></div>
     </div>
-</nav>
-<div class="container">
-    <div class="row">
+    <script src="{{ url_for('static', filename = 'assets/js/bootstrap.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename = 'assets/js/app.js') }}"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="{{ url_for('static', filename = 'assets/extensions/dayjs/dayjs.min.js') }}"></script>
+    <script src="{{url_for('static', filename='assets/js/pages/socket-io-data.js') }}"></script>
+    <!-- Add the following script tags to your HTML templates -->
 
-    </div>
-</div>
-<script src="{{ url_for('static', filename = 'assets/js/bootstrap.js') }}"></script>
-<script src="{{ url_for('static', filename = 'assets/js/app.js') }}"></script>
-
-<!-- Need: Apexcharts -->
-<!--<script src="{{ url_for('static', filename = 'assets/extensions/apexcharts/apexcharts.min.js') }}"></script>-->
-<script src="{{ url_for('static', filename = 'assets/extensions/dayjs/dayjs.min.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename = 'assets/js/pages/ui-apexchart.js') }}"></script>-->
-<!-- Add the following script tags to your HTML templates -->
-
-<script src="{{ url_for('static', filename = 'assets/js/areas_js/controllers-area-mold.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename = 'assets/js/radial-counter.js') }}"></script>-->
-</body>
-
+    <script src="{{ url_for('static', filename = 'assets/js/areas_js/controllers-area-mold.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename = 'assets/js/radial-counter.js') }}"></script>-->
+  </body>
 </html>

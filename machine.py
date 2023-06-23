@@ -619,6 +619,17 @@ def delete_machine():
     return jsonify({'success': True})
 
 
+@app.route('/update_ip_data', methods=['POST'])
+def update_ip_data():
+    status = request.json['message']
+    stop_date = request.json['stop_date']
+    sid = request.json['sid']
+    cur.execute(f"UPDATE public.fetched_ip_tbl SET status='{status}', stop_date='{stop_date}' WHERE sid='{sid}'")
+    conn.commit()
+    print("Data updated successfully in the database")
+    return jsonify("Data updated successfully in the database")
+
+
 @app.route('/insert_ip_data', methods=['POST'])
 def insert_ip_data():
     try:
@@ -726,7 +737,7 @@ def handle_disconnect():
         f"UPDATE public.fetched_ip_tbl SET status='DISCONNECTED', stop_date='{jsonStopDate}' WHERE sid='{client_sid}'")
     conn.commit()
     socketio.emit('client_disconnected', {
-        'message': 'DISCONNECTED', 'sid': request.sid, 'client_ip': client_ip})
+        'message': 'DISCONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'stop_date':jsonStopDate})
 
 
 
