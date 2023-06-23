@@ -12,7 +12,7 @@ import socketio
 import subprocess
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, time
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json, session
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required, LoginManager, UserMixin
 from flask_socketio import SocketIO, emit
@@ -323,17 +323,12 @@ def get_card_details():
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]        
         }
         cards.append(card)
 
@@ -420,41 +415,38 @@ def card_details_wirebond():
 def card_details_eol1():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT
-     fit.id,
-	fit.area,
-	fit.port,
-	fit.controller_name,
-	fit.status,
-	mdt.operator,
-	mdt.assigned_gl,
-	mdt.operation_code,
-	mdt.operation,
-	mdt.machine_name,
-    fit.machine_name as machine
-FROM
-    public.fetched_ip_tbl AS fit
-    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
-WHERE
-    fit.area = 'Eol1' OR fit.area = 'eol1'""")
+                SELECT
+                    fit.status as STATUS,
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
+                WHERE
+                    fit.area = 'Eol1' OR fit.area = 'eol1'
+    """)
     card_data = cursor.fetchall()
     cursor.close()
 
     # Convert data to a list of dictionaries
     cards = []
     for row in card_data:
+        machine_start_date = datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S.%f').time()  # Convert string to time object
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
+            'STATUS': row[0],
+            'MO': row[1],
+            'EMP_NO': row[2],
+            'RUNNING_QTY': row[3],
+            'START_TIME': row[4].strftime('%H:%M:%S'),  # Convert time to string
+            'MACHINE_START_DATE': machine_start_date.strftime('%H:%M:%S'),  # Convert time to string
+            'MACHINE_NAME': row[6]
         }
         cards.append(card)
 
@@ -465,23 +457,22 @@ WHERE
 def card_details_eol2():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT
-     fit.id,
-	fit.area,
-	fit.port,
-	fit.controller_name,
-	fit.status,
-	mdt.operator,
-	mdt.assigned_gl,
-	mdt.operation_code,
-	mdt.operation,
-	mdt.machine_name,
-    fit.machine_name as machine
-FROM
-    public.fetched_ip_tbl AS fit
-    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
-WHERE
-    fit.area = 'Eol2' OR fit.area = 'eol2'""")
+                SELECT
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
+                WHERE
+                    fit.area = 'Eol2' OR fit.area = 'eol2'
+    """)
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -489,17 +480,12 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]        
         }
         cards.append(card)
 
@@ -510,23 +496,22 @@ WHERE
 def card_details_mold():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT
-     fit.id,
-	fit.area,
-	fit.port,
-	fit.controller_name,
-	fit.status,
-	mdt.operator,
-	mdt.assigned_gl,
-	mdt.operation_code,
-	mdt.operation,
-	mdt.machine_name,
-    fit.machine_name as machine
-FROM
-    public.fetched_ip_tbl AS fit
-    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
-WHERE
-    fit.area = 'Mold' OR fit.area = 'mold'""")
+                SELECT
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
+                WHERE
+                    fit.area = 'Mold' OR fit.area = 'mold'
+    """)
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -534,17 +519,12 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]        
         }
         cards.append(card)
 
@@ -555,23 +535,22 @@ WHERE
 def card_details_die_prep():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT
-     fit.id,
-	fit.area,
-	fit.port,
-	fit.controller_name,
-	fit.status,
-	mdt.operator,
-	mdt.assigned_gl,
-	mdt.operation_code,
-	mdt.operation,
-	mdt.machine_name,
-    fit.machine_name as machine
-FROM
-    public.fetched_ip_tbl AS fit
-    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
-WHERE
-    fit.area = 'Die Prep' OR fit.area = 'die drep'""")
+                SELECT
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,area_var
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
+                WHERE
+                    fit.area = 'Die Prep' OR fit.area = 'die drep'
+    """)
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -579,18 +558,12 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
-
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]
         }
         cards.append(card)
 
@@ -601,23 +574,22 @@ WHERE
 def card_details_die_attached():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                    SELECT
-     fit.id,
-	fit.area,
-	fit.port,
-	fit.controller_name,
-	fit.status,
-	mdt.operator,
-	mdt.assigned_gl,
-	mdt.operation_code,
-	mdt.operation,
-	mdt.machine_name,
-    fit.machine_name as machine
-FROM
-    public.fetched_ip_tbl AS fit
-    LEFT JOIN public.machine_data_tbl AS mdt ON fit.port = mdt.machine_name
-WHERE
-    fit.area = 'Die Attached' OR fit.area = 'die attached'""")
+                SELECT
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
+                WHERE
+                    fit.area = 'Eol1' OR fit.area = 'eol1'
+    """)
     card_data = cursor.fetchall()
     cursor.close()
 
@@ -625,17 +597,12 @@ WHERE
     cards = []
     for row in card_data:
         card = {
-            'id': row[0],
-            'area': row[1],
-            'port': row[2],
-            'controller_name': row[3],
-            'status': row[4],
-            'operator': row[5],
-            'assigned_gl': row[6],
-            'operation_code': row[7],
-            'operation': row[8],
-            'machine_name': row[9],
-            'machine': row[10]
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]
         }
         cards.append(card)
 

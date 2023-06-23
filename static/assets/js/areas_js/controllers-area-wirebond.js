@@ -6,20 +6,21 @@ $(document).ready(function () {
             success: function (data) {
                 // Loop through the data and create a card element for each item
                 $.each(data, function (index, item) {
-                    var main_status = item.status;
+                    console.log("🚀 ~ file: controllers-area-eol1.js:9 ~ item:", item)
+                    var main_status = item.STATUS;
                     var status = '';
                     var stat = '';
-                    var mo = item.mo || '--';
-                    var opr_id_no = item.operatorIdNum || '--';
-                    var qtyToProccessStatus = item.totalProccessQty || '--';
+                    var mo = item.MO || '--';
+                    var opr_id_no = item.EMP_NO || '--';
+                    var qtyToProccessStatus = item.RUNNING_QTY || '--';
                     var effciencyStatus  = '';
-                    var startTimeStatus  = item.start_time;
+                    var startTimeStatus  = item.START_TIME;
                     var totalRunningTime  = '';
                     var idleTime  = '';
                     var ooeStatus  = '';
-                    var totalRunningTime = item.duration
-                    var fit_start_date = item.fit_start_date;
-
+                    var totalRunningTime = '--';
+                    var fit_start_date = item.MACHINE_START_DATE;
+                    
                     if (main_status === 'CONNECTED') {
                         if (mo === '--') {
                             status = 'ACTIVE NO RUNNING';
