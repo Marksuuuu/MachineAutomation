@@ -438,14 +438,16 @@ def card_details_eol1():
     # Convert data to a list of dictionaries
     cards = []
     for row in card_data:
-        machine_start_date = datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S.%f').time()  # Convert string to time object
+        machine_start_date = None
+        if row[5] is not None:
+            machine_start_date = datetime.strptime(row[5], '%Y-%m-%d %H:%M:%S.%f').time()
         card = {
             'STATUS': row[0],
             'MO': row[1],
             'EMP_NO': row[2],
             'RUNNING_QTY': row[3],
-            'START_TIME': row[4].strftime('%H:%M:%S'),  # Convert time to string
-            'MACHINE_START_DATE': machine_start_date.strftime('%H:%M:%S'),  # Convert time to string
+            'START_TIME': row[4].strftime('%H:%M:%S'),
+            'MACHINE_START_DATE': machine_start_date.strftime('%H:%M:%S') if machine_start_date else None,
             'MACHINE_NAME': row[6]
         }
         cards.append(card)
@@ -698,6 +700,15 @@ def receive_file(payload):
     # Send a response back to the client
     socketio.emit('result_response', {'fileNameWithIni': fileNameWithIni})
     return jsonify(data=fileNameWithIni)
+
+
+@socketio.on('custom_event')
+def handle_custom_event(data):
+    sid = data['sessionID']
+    machine_name = data['machine_name_var']
+    print('received data:', sid)
+    # Emitting a response back to the client
+    socketio.emit('my_message', {'machine_name': machine_name}, to=sid)
 
 
 @socketio.on('client_message')

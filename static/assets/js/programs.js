@@ -29,7 +29,7 @@ $(document).ready(function () {
             if (data === 'running') {
                 return '<button type="button" class="btn btn-danger rounded-pill icon icon icon dripicons dripicons-media-stop stop-btn" data-id="' + row.id + '"></button> ';
             } else if (data === 'stopped') {
-                return '<button type="button" class="btn btn-success rounded-pill icon icon icon dripicons dripicons-media-play start-btn" data-id="' + row.id + '"></button> '
+                return '<button type="button" class="btn btn-success bi bi-pencil start-btn" data-id="' + row.id + '"></button> '
             } else {
                 return data;
             }

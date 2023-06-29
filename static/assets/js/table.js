@@ -1,6 +1,5 @@
 $(document).ready(function () {
   // Define the DataTable
-
   var table = $('#machine-table').DataTable({
     processing: true,
     ajax: '/machines',
@@ -275,23 +274,29 @@ $(document).ready(function () {
     });
   });
 
-
   $('#machine_result_id tbody').on('click', '.edit-btn', function () {
     var row = $(this).closest('tr');
     var id = $(this).attr('data-id');
-    console.log(id)
+    console.log(id);
     var inputMachineNameTd = row.find('td:nth-child(5)');
     var inputAreaTd = row.find('td:nth-child(6)');
+    var sessionID = row.find('td:nth-child(3)').text(); // Get the text content of the sessionID cell
     var buttonReplace = row.find('td:nth-child(7)');
     inputMachineNameTd.html('<input type="text" class="form-control" id="machine_name_var" value="' + inputMachineNameTd.text() + '">');
     inputAreaTd.html('<input type="text" class="form-control" id="area_var" value="' + inputAreaTd.text() + '">');
     buttonReplace.html('<button type="button" id="edit" class="icon dripicons btn dripicons-plus btn btn-outline-primary save-btn" data-id="' + id + '">');
+    // sendEmit(sessionID, inputMachineNameTd);
   });
 
+
+
   $('#machine_result_id tbody').on('click', '.save-btn', function () {
+    var row = $(this).closest('tr');
     var id = $(this).attr('data-id');
     var machine_name_var = $('#machine_name_var').val()
     var area_var = $('#area_var').val()
+    var sessionID = row.find('td:nth-child(3)').text(); // Get the text content of the sessionID cell
+    sendEmit(sessionID, machine_name_var);
     console.log(id, machine_name_var, area_var)
     $('#default').modal('show');
     if (machine_name_var == '' && area_var == '') {
@@ -323,6 +328,18 @@ $(document).ready(function () {
         }
       });
     }
+  });
+
+  function sendEmit(sessionID, machine_name_var) {
+    var socket = io.connect();
+    console.log("Session ID:", sessionID);
+    socket.emit('custom_event', { 'sessionID': sessionID, 'machine_name_var': machine_name_var });
+  }
+
+  // Client-side code to handle the server's response
+  socket.on('response', function (data) {
+    console.log('Received server response:', data);
+    // Process the response data as needed
   });
 
   $('#machine-table').on('click', '.delete-btn', function () {

@@ -17,20 +17,22 @@ window.title("Client")
 sio = socketio.Client()
 client_id = str(uuid.uuid4())
 filename = os.path.basename(__file__)
-file_path = 'rfid_config.ini'
+remove_py = re.sub('.py', '', filename)
+fileName = 'config_' + remove_py + '.json'
+folder_path = 'downloadConfigs'
+file_path = f'{folder_path}/{fileName}'
 
 # Fetch data from the API
 url = 'http://odoodev.teamglac.com:3001/data'
 response = requests.get(url)
 data = json.loads(response.text)['data']
+print(data)
 
 # Define the start and stop functions
 @sio.event
 def connect():
     print('Connected to server')
     sio.emit('client_connected', {'machine_name': filename})
-    sio.on('dataPassed', receive_data)
-
 
 @sio.event
 def disconnect():
@@ -38,10 +40,32 @@ def disconnect():
     window.destroy()
     sys.exit(0)
 
+@sio.event
+def my_message(data):
+    print('message received with', data['machine_name'])
+    toPassData = data['machine_name']
+    write_to_file_config(toPassData)
+    sio.emit('my response', {'response': 'my response'})
+
+def write_to_file_config(toPassData):
+    remove_py = re.sub('.py', '', filename)
+    fileNameWithIni = 'config_' + remove_py + '.json'
+    folder_path = 'downloadConfigs'
+    file_path = f'{folder_path}/{fileNameWithIni}'
+
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    with open(file_path, 'w') as file:
+        data = {
+            'filename': remove_py,
+            'data': toPassData
+        }
+        json.dump(data, file)
 
 @sio.event
 def send_file():
-    with open(file_path, 'rb') as file:
+    with open(fileName, 'rb') as file:
         # Read the file as binary data
         file_data = file.read()
 
@@ -51,45 +75,53 @@ def send_file():
     # Emit the 'file_event' with the payload
     sio.emit('file_event', payload)
 
-
 def start():
     global index
-    if not index:
+    if index is None:
         print("No data found. Please add or set up data first.")
     else:
-        if index <= len(data):
+        with open(file_path, 'r') as file:
+            file_data = json.load(file)
+            data_result = file_data['data']
+            print(data_result)
+
+        if index < len(data):
             stat_var = 'STARTED'
-            machine_name = filename
             get_start_date = datetime.now()
-            result = re.sub('.py', '', machine_name)
             uID = str(client_id)
-            machine = data[f'index{index}']
-            if machine['CLASS'] == result:
-                data_to_send = machine, stat_var, uID, result, str(get_start_date)
+            machine = data[index]
+
+            # Check if the machine's CLASS matches data_result
+            if machine[str(index + 1)]['CLASS'] == data_result:
+                data_to_send = {
+                    'machine': machine,
+                    'stat_var': stat_var,
+                    'uID': uID,
+                    'data_result': data_result,
+                    'get_start_date': str(get_start_date)
+                }
                 sio.emit('data', data_to_send)
                 print('Data emitted:', data_to_send)
 
             index += 1
 
-            if index > len(data):
+            if index >= len(data):
                 print("All indexes have been sent.")
                 start_button.config(state=tk.NORMAL)
         else:
             print("All indexes have been sent.")
 
-
 def stop():
     global index
-    if not index:
+    if index is None:
         print("No data found. Please add or set up data first.")
     else:
         stat_var = 'STOP'
         get_stop_date = datetime.now()
         uID = str(client_id)
-        data = stat_var, uID, str(get_stop_date)
-        sio.emit('stop_data', data)
+        data_to_send = stat_var, uID, str(get_stop_date)
+        sio.emit('stop_data', data_to_send)
         start_button.config(state=tk.NORMAL)
-
 
 @sio.event
 def receive_data(data):
@@ -97,13 +129,12 @@ def receive_data(data):
     data_received = data['data']
     if data_received == 'misteklock':
         send_file()
-        print('item sendingg....')
+        print('item sending....')
     else:
         print('Received data:', data_received)
 
-
-# Initialize the index to 1
-index = 1
+# Initialize the index to None
+index = 0
 
 # Create the GUI
 start_button = tk.Button(window, text="Start", command=start)

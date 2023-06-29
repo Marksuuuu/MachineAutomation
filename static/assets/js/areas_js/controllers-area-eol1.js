@@ -14,12 +14,12 @@ $(document).ready(function () {
                     var opr_id_no = item.EMP_NO || '--';
                     var qtyToProccessStatus = item.RUNNING_QTY || '--';
                     var effciencyStatus  = '';
-                    var startTimeStatus  = item.MACHINE_START_DATE;
+                    var startTimeStatus  = item.MACHINE_START_DATE || '--';
                     var totalRunningTime  = '';
                     var idleTime  = '';
                     var ooeStatus  = '';
                     var totalRunningTime = '--';
-                    var fit_start_date = item.START_TIME;
+                    var fit_start_date = item.START_TIME || '--';
 
                     if (main_status === 'CONNECTED') {
                         if (mo === '--') {
