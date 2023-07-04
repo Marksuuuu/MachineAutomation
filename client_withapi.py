@@ -1,13 +1,14 @@
-import tkinter as tk
 import json
-import socketio
-import uuid
 import os
 import re
 import signal
 import sys
-import requests
+import tkinter as tk
+import uuid
 from datetime import datetime
+
+import requests
+import socketio
 
 # Create a Tkinter window
 window = tk.Tk()
@@ -28,11 +29,13 @@ response = requests.get(url)
 data = json.loads(response.text)['data']
 print(data)
 
+
 # Define the start and stop functions
 @sio.event
 def connect():
     print('Connected to server')
     sio.emit('client_connected', {'machine_name': filename})
+
 
 @sio.event
 def disconnect():
@@ -40,12 +43,14 @@ def disconnect():
     window.destroy()
     sys.exit(0)
 
+
 @sio.event
 def my_message(data):
     print('message received with', data['machine_name'])
     toPassData = data['machine_name']
     write_to_file_config(toPassData)
     sio.emit('my response', {'response': 'my response'})
+
 
 def write_to_file_config(toPassData):
     remove_py = re.sub('.py', '', filename)
@@ -63,6 +68,7 @@ def write_to_file_config(toPassData):
         }
         json.dump(data, file)
 
+
 @sio.event
 def send_file():
     with open(fileName, 'rb') as file:
@@ -74,6 +80,7 @@ def send_file():
 
     # Emit the 'file_event' with the payload
     sio.emit('file_event', payload)
+
 
 def start():
     global index
@@ -93,13 +100,8 @@ def start():
 
             # Check if the machine's CLASS matches data_result
             if machine[str(index + 1)]['CLASS'] == data_result:
-                data_to_send = {
-                    'machine': machine,
-                    'stat_var': stat_var,
-                    'uID': uID,
-                    'data_result': data_result,
-                    'get_start_date': str(get_start_date)
-                }
+                data_to_send = machine, stat_var, uID,  data_result, str(get_start_date)
+                
                 sio.emit('data', data_to_send)
                 print('Data emitted:', data_to_send)
 
@@ -110,6 +112,7 @@ def start():
                 start_button.config(state=tk.NORMAL)
         else:
             print("All indexes have been sent.")
+
 
 def stop():
     global index
@@ -123,6 +126,7 @@ def stop():
         sio.emit('stop_data', data_to_send)
         start_button.config(state=tk.NORMAL)
 
+
 @sio.event
 def receive_data(data):
     # Process the received data
@@ -132,6 +136,7 @@ def receive_data(data):
         print('item sending....')
     else:
         print('Received data:', data_received)
+
 
 # Initialize the index to None
 index = 0
@@ -146,12 +151,14 @@ stop_button.pack()
 # Connect to the Socket.IO server
 sio.connect('http://10.0.2.150:8085')
 
+
 # Handle the SIGINT signal
 def signal_handler(signal, frame):
     print('Disconnecting from server...')
     sio.disconnect()
     window.destroy()
     sys.exit(0)
+
 
 # Register the signal handler
 signal.signal(signal.SIGINT, signal_handler)

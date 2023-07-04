@@ -266,30 +266,37 @@
                             </div>
                         </div>
 
-                        <div class="modal fade modal-xl" id="myModal">
+                        <div class="modal fade modal-lg" id="myModal">
                             <div class="modal-dialog modal-dialog-scrollable modal-xl">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Controller IP : <span id='controller_ip'></span></h5>
+                                        <div class="modal-title">
+                                            <div class="input-group mb-3">
+                                                <span style="display: none;" id='spanDataId'></span>
+                                                <input type="text" id='controllerInput' class="form-control" placeholder="Controller Name" aria-describedby="controllerBtn">
+                                                <button class="icon dripicons btn dripicons-plus btn btn-outline-primary" type="button" id="controllerBtn">
+                                                </button>
+                                            </div>
+                                        </div>
                                         <button type="button" class="close" data-bs-dismiss='modal' aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <table class="table" id='machine_result_id' style="width:100%">
+                                        <table class="table table-responsive table-hover" id='machineResultTbl' style="width:100%">
                                             <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Status</th>
-                                                <th>Session ID</th>
-                                                <th>Ports</th>
-                                                <th>Machine Name</th>
-                                                <th>Dashboard</th>
-                                                <th>Action</th>
-                                            </tr>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>fetched_ip</th>
+                                                    <th>status</th>
+                                                    <th>sid</th>
+                                                    <th>port</th>
+                                                    <th>machine_name</th>
+                                                    <th>area</th>
+                                                    <th>controller_name</th>
+                                                    <th>action</th>
+                                                </tr>
                                             </thead>
-                                            <tbody id="modal-data"></tbody>
-                                            <!-- Element to display data from AJAX call -->
                                         </table>
                                     </div>
                                 </div>
@@ -299,7 +306,7 @@
                 </div>
 
                 <div class="card-body">
-                    <table class="table" id="machine-table">
+                    <table class="table table-responsive table-hover" id="machine-table" style="width:100%">
                         <thead>
                         <tr>
                             <th>ID</th>

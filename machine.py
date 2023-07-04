@@ -168,7 +168,7 @@ def get_category():
     return jsonify({'data': category_data})
 
 
-@app.route('/get_name', methods=['POST'])
+@app.route('/get_name', methods=['GET', 'POST'])
 def get_name():
     item_id = int(request.form['id'])  # Retrieve ID from the request form data
 
@@ -202,11 +202,21 @@ def get_name():
                        AND port !=''
                        ORDER BY id DESC LIMIT 5
                        """, (ip,))
-        result2 = cursor.fetchall()
+        rows = cursor.fetchall()
+        machines = []
+        for row in rows:
+            machines.append({
+                'id': row[0],
+                'fetched_ip': row[1],
+                'status': row[2],
+                'sid': row[3],
+                'port': row[4],
+                'machine_name': row[5],
+                'area': row[6],
+                'controller_name': row[7],
+                })
         cursor.close()
-
-        # Return the second query result as JSON response
-        return jsonify(result=result2)
+        return jsonify({'data': machines})
     else:
         return jsonify(result=None)
 
@@ -215,8 +225,8 @@ def get_name():
 def insert_machine_name():
     cursor = conn.cursor()
     form_id = request.form['id']
-    machine_name = request.form['machine_name_var']
-    area_var = request.form['area_var']
+    machine_name = request.form['selectMachineName']
+    area_var = request.form['selectArea']
     cursor.execute(f"""UPDATE 
                    public.fetched_ip_tbl
                    SET machine_name = '{machine_name}',
@@ -236,7 +246,7 @@ def insert_machine_name():
 def insert_controller():
     cursor = conn.cursor()
     form_ip = request.form['ip']
-    controller_name_var = request.form['controller_name_var']
+    controller_name_var = request.form['controllerInput']
     cursor.execute(f"""UPDATE 
                    public.fetched_ip_tbl
                    SET controller_name = '{controller_name_var}'
@@ -679,6 +689,20 @@ def request_data():
     return jsonify(data=data)
 
 
+@app.route('/getMachinesNamesApi')
+def getMachinesNamesApi():
+    url = 'http://cmms.teamglac.com/apimachine2.php'
+    response = requests.get(url)
+    data = json.loads(response.text)['data']
+    
+    classes = set()  # Create a set to store unique values
+    
+    for rec in data:
+        classes.add(rec['CLASS']) 
+    unique_classes = list(classes) 
+    return jsonify(unique_classes)
+
+
 ## SOCKET IO CONNECTION ##
 # Define the event handler for receiving files
 @socketio.on('file_event')
@@ -756,6 +780,7 @@ def handle_disconnect():
 def handle_data(data, stat_var, uID, result, get_start_date):
     client_ip = request.remote_addr
     print(f'Received data from {client_ip}: {data}')
+    print(data)
     EMP_NO = data['EMP_NO']
     AREA_NAME = data['AREA_NAME']
     CLASS = data['CLASS']
