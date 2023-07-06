@@ -15,7 +15,7 @@ window = tk.Tk()
 window.title("Client")
 
 # Create a Socket.IO client
-sio = socketio.Client()
+sio = socketio.Client(reconnection=True, reconnection_attempts=5, reconnection_delay=1, reconnection_delay_max=5)
 client_id = str(uuid.uuid4())
 filename = os.path.basename(__file__)
 remove_py = re.sub('.py', '', filename)
@@ -29,20 +29,19 @@ response = requests.get(url)
 data = json.loads(response.text)['data']
 print(data)
 
-
 # Define the start and stop functions
 @sio.event
 def connect():
     print('Connected to server')
     sio.emit('client_connected', {'machine_name': filename})
 
-
 @sio.event
 def disconnect():
     print('Disconnected from server')
-    window.destroy()
-    sys.exit(0)
 
+@sio.event
+def reconnect():
+    print('Reconnected to server')
 
 @sio.event
 def my_message(data):
@@ -50,7 +49,6 @@ def my_message(data):
     toPassData = data['machine_name']
     write_to_file_config(toPassData)
     sio.emit('my response', {'response': 'my response'})
-
 
 def write_to_file_config(toPassData):
     remove_py = re.sub('.py', '', filename)
@@ -68,7 +66,6 @@ def write_to_file_config(toPassData):
         }
         json.dump(data, file)
 
-
 @sio.event
 def send_file():
     with open(fileName, 'rb') as file:
@@ -80,7 +77,6 @@ def send_file():
 
     # Emit the 'file_event' with the payload
     sio.emit('file_event', payload)
-
 
 def start():
     global index
@@ -101,7 +97,7 @@ def start():
             # Check if the machine's CLASS matches data_result
             if machine[str(index + 1)]['CLASS'] == data_result:
                 data_to_send = machine, stat_var, uID,  data_result, str(get_start_date)
-                
+
                 sio.emit('data', data_to_send)
                 print('Data emitted:', data_to_send)
 
@@ -112,7 +108,6 @@ def start():
                 start_button.config(state=tk.NORMAL)
         else:
             print("All indexes have been sent.")
-
 
 def stop():
     global index
@@ -126,7 +121,6 @@ def stop():
         sio.emit('stop_data', data_to_send)
         start_button.config(state=tk.NORMAL)
 
-
 @sio.event
 def receive_data(data):
     # Process the received data
@@ -136,7 +130,6 @@ def receive_data(data):
         print('item sending....')
     else:
         print('Received data:', data_received)
-
 
 # Initialize the index to None
 index = 0
@@ -151,14 +144,12 @@ stop_button.pack()
 # Connect to the Socket.IO server
 sio.connect('http://10.0.2.150:8085')
 
-
 # Handle the SIGINT signal
 def signal_handler(signal, frame):
     print('Disconnecting from server...')
     sio.disconnect()
     window.destroy()
     sys.exit(0)
-
 
 # Register the signal handler
 signal.signal(signal.SIGINT, signal_handler)

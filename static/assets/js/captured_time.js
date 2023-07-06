@@ -4,11 +4,18 @@ $(document).ready(function () {
     responsive: {
       details: false
     },
+
+//     MO
+// EMP_NO
+// RUNNING_QTY
+// START_TIME
+// MACHINE_START_DATE
+// MACHINE_NAME
     ajax: '/card_details_table',
     lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
     columns: [
-      { data: 'id' },
-      { data: 'device_id' },
+      { data: 'MO' },
+      { data: 'EMP_NO' },
       {
         data: 'status',
         render: function (data, type, row) {

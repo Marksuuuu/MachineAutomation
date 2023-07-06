@@ -1,5 +1,5 @@
 var ajaxRequestTable;
-var fetchedIp;
+// var fetchedIp;
 var table;
 
 $(document).ready(function () {
@@ -12,7 +12,12 @@ $(document).ready(function () {
     columns: [
       { data: 'id' },
       { data: 'fetched_ip' },
-      { data: 'controller_name' },
+      { data: 'controller_name',
+        className: 'text-center',
+        render: function(row, data){
+          return '<span class="badge bg-primary" style="width: auto; height: auto; font-size:20px;">' + row + '</span>';
+        },
+      },
       {
         data: null,
         className: 'text-center',
@@ -23,14 +28,40 @@ $(document).ready(function () {
       }
     ],
     "order": [[1, 'asc']],
-    initComplete: function () {
-      var firstRowData = table.row(0).data();
-      if (firstRowData) {
-        fetchedIp = firstRowData.fetched_ip;
-        controller_name = firstRowData.controller_name;
-      
-      }
-    },
+
+
+
+
+
+
+
+        //         var controllerSpanExists = $('#controller_span').children().length > 0;
+//         if (!controllerSpanExists) {
+//           var span_controller = '<span>Controller name : ' + controller_name + '</span>';
+//           var controller_button = '<button type="button" class="btn btn-outline-primary edit-controller-btn" data-id="' + controller_id + '">Edit</button>'
+//           var controller_span = $('<div>').attr('id', 'controller_span').append(span_controller);
+//           var button_class = $('<div>').attr('id', 'button_class').append(controller_button);
+//           $(controller_span).insertAfter("#controller_ip");
+//           $(button_class).insertAfter("#controller_span");
+//         } else {
+//           $('#controller_span').children().text('Controller name : ' + controller_name);
+//           var editButton = $('<button>').attr('type', 'button').addClass('btn btn-outline-primary edit-controller-btn').attr('data-id', controller_id).text('Edit');
+//           // Check if the button already exists before adding it
+//           if ($('#button_class').find('.edit-controller-btn').length === 0) {
+//             $('#controller_span').children().text('Controller name: ' + controller_name);
+//             var editButton = $('<button>')
+//               .attr('type', 'button')
+//               .addClass('btn btn-outline-primary edit-controller-btn')
+//               .attr('data-id', controller_id)
+//               .text('Edit');
+//             $('#button_class').append(editButton);
+//           }
+
+//         }
+//         $('#controller_name').replaceWith('');
+//         $('#add-controller-name').replaceWith('');
+//       }
+
     initComplete: function () {
       displayControllerName();
     }
@@ -49,22 +80,44 @@ $(document).ready(function () {
   
     if (firstRowData && firstRowData.controller_name) {
       controllerInput.prop('value', firstRowData.controller_name);
-      controllerInput.prop('style', 'pointer-events: none;');
+      controllerInput.prop('style', 'pointer-events: none; border:none;');
       controllerInput.prop('readonly', true);
-      button.removeAttr('id')
-      button.prop('class', 'btn btn-outline-primary icon dripicons dripicons-pencil edit-btn');
+      // button.removeAttr('id')
+      button.attr('class', 'btn btn-outline-danger icon dripicons dripicons-pencil edit-btn-test');
       
     } else {
       controllerInput.prop('value', '');
       button.prop('type', 'button');
       button.prop('class', 'btn btn-outline-success icon dripicons dripicons-plus save-btn');
     }
+
+    $('.edit-btn-test').click(function(){
+      ajaxChanged(firstRowData)
+    })
+
+    $('.save-btn').click(function(){
+      controllerSave();
+    })
    
   }
 
-  $('.edit-btn').click(function(){
-    console.log('test')
-  })
+  function ajaxChanged(firstRowData) {
+    console.log("🚀 ~ file: table.js:106 ~ ajaxChanged ~ firstRowData:", firstRowData.controller_name)
+    var controllerInput = $('#controllerInput');
+    var button = $('#controllerBtn');
+    controllerInput.prop('style', 'pointer-events: auto;');
+
+
+    controllerInput.attr('value', firstRowData.controller_name);
+    controllerInput.attr('readonly', false);
+    button.attr('class', 'btn btn-outline-primary icon dripicons dripicons-plus update-btn');
+
+    $('.update-btn').click(function(){
+      controllerSave();
+    })
+  }
+
+
   
 
   function ajaxRequestShow(id) {
@@ -97,7 +150,7 @@ $(document).ready(function () {
         },
         { data: 'sid' },
         { data: 'port' },
-        { data: 'machine_name' },
+        { data: 'machine_name'},
         { data: 'area' },
         { data: 'controller_name' },
         {
@@ -120,6 +173,22 @@ $(document).ready(function () {
           }
         }
       ],
+      columnDefs: [
+        {
+          targets: 3, 
+          width: '20%',
+        }
+      ],
+      initComplete: function () {
+        var firstRowData = table.row(0).data();
+        if (firstRowData) {
+          var fetchedIp = firstRowData.fetched_ip;
+          // console.log("🚀 ~ file: table.js:30 ~ fetchedIp:", fetchedIp)
+          $('#spanDataId').attr('data-ip', fetchedIp)
+          controller_name = firstRowData.controller_name;
+        
+        }
+      },
       "order": [[1, 'asc']]
       
     });
@@ -132,6 +201,10 @@ $(document).ready(function () {
       success: function(response) {
         var machineNames = response;
         var select = $("#machine_name_var"); 
+        select.select2({
+          dropdownParent: $('#myModal')
+        })
+        
         $.each(machineNames, function(index, name) {
           select.append($('<option></option>').val(name).html(name));
         });
@@ -154,6 +227,7 @@ $(document).ready(function () {
     getMachinesNamesApi();
 
     var inputArea = $('<select class="form-control" id="area_var"></select>');
+    
     var areaOptions = ['Die Prep', 'Die Attach', 'Wirebond', 'Mold', 'EOL1', 'EOL2'];
     areaOptions.forEach(function(option) {
       var optionElement = $('<option></option>').text(option);
@@ -173,7 +247,6 @@ $(document).ready(function () {
     var inputAreaTd = row.find('td:nth-child(7)');
     var sessionID = row.find('td:nth-child(4)').text();
     var selectMachineName = inputMachineNameTd.find('select').val();
-    console.log("🚀 ~ file: table.js:176 ~ selectMachineName:", selectMachineName)
     var selectArea = inputAreaTd.find('select').val();
     sendEmit(sessionID, selectMachineName)
     var formData = new FormData()
@@ -184,18 +257,18 @@ $(document).ready(function () {
     ajaxRequestUpdate('/insert_machine_name', formData)
   });
 
-  $('#controllerBtn').click(function () {
-    controllerSave();
-  });
+  // $('#controllerBtn').click(function () {
+  //   controllerSave();
+  // });
 
   function controllerSave() {
-    var ip = fetchedIp;
+    var ip = $('#spanDataId').attr('data-ip');
     var controllerInput = $('#controllerInput').val();
-
-    var formData = new FormData()
+  
+    var formData = new FormData();
     formData.append('ip', ip);
-    formData.append('controllerInput', controllerInput)
-
+    formData.append('controllerInput', controllerInput);
+  
     ajaxRequestUpdateController('/insert_controller', formData);
   }
 
@@ -216,6 +289,7 @@ $(document).ready(function () {
           showConfirmButton: true,
         })
         ajaxRequestTable.ajax.reload();
+        table.ajax.reload()
         $('#machine_name_var').replaceWith(data.machine_name);
         $('#area_var').replaceWith(data.area_var);
       }
@@ -233,13 +307,15 @@ $(document).ready(function () {
       beforeSend: function() {
       },
       success: function(data){
+        location.reload();
+        var row = $(this).closest('div').find('input');
         Swal.fire({
           position: 'center',
           icon: 'success',
           title: 'Your work has been saved',
           showConfirmButton: true,
 
-          
+
         })
         table.ajax.reload();
         
@@ -247,6 +323,42 @@ $(document).ready(function () {
     }).done(function(){
     });
   }
+
+    $('#machine-table').on('click', '.delete-btn', function () {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire(
+          'Deleted!',
+          'Your file has been deleted.',
+          'success'
+        )
+        var id = $(this).data('id');
+        $.ajax({
+          url: '/machines/delete',
+          method: 'POST',
+          data: { id: id },
+          success: function (result) {
+            table.ajax.reload();
+          }
+        });
+      }
+      else
+        Swal.fire({
+          title: 'Think Again!',
+          icon: 'info',
+        })
+    })
+
+  });
+
 });
 
 function sendEmit(sessionID, machine_name_var) {
@@ -262,6 +374,8 @@ socket.on('response', function (data) {
 });
 
 }
+
+
   
 
   

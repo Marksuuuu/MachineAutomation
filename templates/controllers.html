@@ -177,142 +177,65 @@
             </div>
         </div>
 
-        <!-- for add machines -->
-        <!-- Basic Tables start -->
+        <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33" style="display: none;" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-xl" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <span id='dataController' style="display: none;"></span>
+                  <h4 class="modal-title" id="myModalLabel33">
+                    Controllers
+                  </h4>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <form action="#">
+                  <div class="modal-body">
+                    <label for="email">Machines: </label>
+                    <div class="form-group">
+                        <select id="machine-select" class="form-controll" multiple="multiple"></select>
+                    </div>
+                   <!-- <label for="password">Remarks: </label>
+                    <div class="form-group">
+                        <div class="form-group with-title mb-3">
+                        <textarea class="form-control" id="inputData" rows="3"></textarea>
+                        <label>Your Remarks</label>
+                        </div>
+                    </div>-->
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
+                      <i class="bx bx-x d-block d-sm-none"></i>
+                      <span class="d-none d-sm-block">Close</span>
+                    </button>
+                    <button type="button" class="btn btn-primary ms-1" id='submitClick'>
+                      <i class="bx bx-check d-block d-sm-none"></i>
+                      <span class="d-none d-sm-block">Submit</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
         <section class="section" id='container'>
             <div class="card">
                 <div class="card-header">
                     <div class="form-group">
-                        <!-- Button trigger for login form modal -->
-                        <!--  <button type="button" style="float: right;" class="btn btn-primary text-right"
-                                  data-toggle="modal" id='openBtn'
-                          <span>ADD CONTROLLER</span>
-                          </button>
-
-                          <!--add machine form Modal -->
-                        <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33"
-                             style="display: none;" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-lg" role="document">
-                                <div id='waitMemodal'>
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title" id="myModalLabel33">
-                                                Add Controller
-                                            </h4>
-                                            <button type="button" class="close" data-bs-dismiss="modal"
-                                                    aria-label="Close">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                     viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                     stroke-linejoin="round"
-                                                     class="feather feather-x">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <form action="#" id='add-machine' name='add-machine'>
-                                            <div class="modal-body device-id">
-                                                <label for="controllerInput">Controller IP: </label>
-                                                <br>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" name='controllerIp'
-                                                           id='controllerIp' placeholder="Controller IP Address"
-                                                           aria-describedby="button-addon1">
-                                                    <button class="btn btn-info" type="button" id="button-addon1">
-                                                        CHECK IP
-                                                    </button>
-                                                </div>
-                                                <label for="machine_name">Controller Name: </label>
-                                                <br>
-                                                <input type="text" class="form-control" name='controllerInput'
-                                                       placeholder="Controller Name">
-                                                <br>
-                                                <table class="table" id="check-ip-tbl">
-                                                    <thead>
-                                                    <tr>
-                                                        <th>Filename</th>
-                                                        <th>Action</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody id='check-ip-tbl-tbody'></tbody>
-                                                </table>
-                                                <div class="input-group mb-3" id="addContainer">
-                                                    <div class="input-group mb-3"><input type="file" name="addMachine[]"
-                                                                                         class="form-control"
-                                                                                         required
-                                                                                         placeholder="Machine Name"
-                                                                                         id="field_'+ FieldCount +'"
-                                                                                         aria-label="Example text with button addon"
-                                                                                         aria-describedby="button-addon1"/></p>
-                                                        <button
-                                                                class="btn btn-info ms-1" type="button" id="addButton">
-                                                            &#43;
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <!-- <button class="btn btn-info ms-1" style="float: right;" type="button" id="addButton">Add Machine Field</button>-->
-                                            </div>
-                                            <div class="modal-footer" id='footer'>
-                                                </button>
-                                                <button type="button" id='submit' class="btn btn-primary ms-1"
-                                                        data-bs-dismiss="modal">
-                                                    <i class="bx bx-check d-block d-sm-none"></i>
-                                                    <span class="d-none d-sm-block">Submit</span>
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
+                        <div class="col-md-2 mb-1">
+                            <div class="input-group mb-3">
+                                <input type="text" id='controllerInput' class="form-control" placeholder="Controller Name" aria-describedby="controllerBtn">
+                                <button class="icon dripicons btn dripicons-plus btn btn-outline-primary" type="button" id="controllerBtn">
+                                </button>
                             </div>
-                        </div>
-
-                        <div class="modal fade modal-lg" id="myModal">
-                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <div class="modal-title">
-                                            <div class="input-group mb-3">
-                                                <span style="display: none; font-weight:bold" id='spanDataId' data-ip></span>
-                                                <input type="text" id='controllerInput' class="form-control" placeholder="Controller Name" aria-describedby="controllerBtn">
-                                                <button class="icon dripicons btn dripicons-plus btn btn-outline-primary" type="button" id="controllerBtn">
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="close" data-bs-dismiss='modal' aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <table class="table table-responsive table-hover" id='machineResultTbl' style="width:100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>IP Address</th>
-                                                    <th>Status</th>
-                                                    <th>Session ID</th>
-                                                    <th>Port</th>
-                                                    <th>Machine Name</th>
-                                                    <th>Area</th>
-                                                    <th>Controller Name</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                          </div>
                     </div>
-                </div>
-
                 <div class="card-body">
                     <table class="table table-responsive table-hover" id="machine-table" style="width:100%">
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Controller IP</th>
+                            <th>Remarks</th>
                             <th>Controller Name</th>
                             <th>Action</th>
                         </tr>
@@ -333,7 +256,7 @@
 <script src="{{url_for('static', filename='assets/extensions/jquery/jquery.min.js') }}"></script>
 <script src="https://cdn.datatables.net/v/bs5/dt-1.12.1/datatables.min.js"></script>
 <script src="{{url_for('static', filename='assets/js/pages/datatables.js') }}"></script>
-<script src="{{url_for('static', filename='assets/js/table.js') }}"></script>
+<script src="{{url_for('static', filename='assets/js/controllers.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Add the following script tags to your HTML templates -->

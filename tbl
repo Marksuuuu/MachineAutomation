@@ -1,0 +1,6 @@
+CREATE TABLE controller_with_machine_tbl (
+    id SERIAL PRIMARY KEY,
+    machine_id INTEGER REFERENCES fetched_ip_tbl(id),
+    controller_id INTEGER REFERENCES controllers_tbl(id),
+    remarks VARCHAR(255)
+);

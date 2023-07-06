@@ -21,6 +21,8 @@ $(document).ready(function () {
                     var totalRunningTime = '--';
                     var fit_start_date = item.START_TIME || '--';
 
+                    var machine_name = item.MACHINE_NAME ? item.MACHINE_NAME : '--'
+
                     if (main_status === 'CONNECTED') {
                         if (mo === '--') {
                             status = 'ACTIVE NO RUNNING';
@@ -37,7 +39,7 @@ $(document).ready(function () {
 
                     var body = '<div class="carbon-example ' + stat + '">'
                         + '<span>Status: ' + status + ' </span><br>'
-                        + '<span id="machine">Machine Name: ' + item.MACHINE_NAME + '</span><br>'
+                        + '<span id="machine">Machine Name: ' + machine_name  + '</span><br>'
                         + '<hr>'
                         + '<div class="oee-div">'
                         + '<span>EFFECTIVENESS: ' + effciencyStatus + '</span>'

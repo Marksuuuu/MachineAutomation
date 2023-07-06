@@ -127,7 +127,6 @@ def login():
                     hris = "http://hris.teamglac.com/"
                     session['photo_url'] = hris + user_data['photo_url']
 
-                print(session['username'])
         return redirect(url_for('index', success=True))
 
     else:
@@ -183,7 +182,6 @@ def get_name():
     if result:
         # Fetch the 'fetched_ip' value from the result dictionary
         ip = result['fetched_ip']
-        print(ip)
         # Perform another database query using the ip
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("""SELECT 
@@ -264,32 +262,30 @@ def insert_controller():
 def card_details_table():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("""
-                   SELECT
-                   id,
-                   device_id,
-                   status,
-                   operator,
-                   assigned_gl,
-                   operation_code,
-                   operation,
-                   area,
-                   machine_name
-                   FROM machine_data_tbl
-                   ORDER BY id ASC
+                       SELECT
+                    mdt.mo as MO,
+                    mdt.emp_no as EMP_NO,
+                    mdt.running_qty as RUNNING_QTY,
+                    fit.start_date as START_TIME,
+                    mdt.start_date as MACHINE_START_DATE,
+                    mdt.class as MACHINE_NAME
+                FROM
+                        public.fetched_ip_tbl AS fit
+                    LEFT JOIN 
+                        public.machine_fetched_data_tbl AS mdt 
+                    ON 
+                        fit.port = mdt.class
                     """)
     dataResult = cursor.fetchall()
     capturedDatas = []
     for data in dataResult:
         capturedData = {
-            'id': data[0],
-            'device_id': data[1],
-            'status': data[2],
-            'operator': data[3],
-            'assigned_gl': data[4],
-            'operation_code': data[5],
-            'operation': data[6],
-            'area': data[7],
-            'machine_name': data[8]
+            'MO': row[0],
+            'EMP_NO': row[1],
+            'RUNNING_QTY': row[2],
+            'START_TIME': row[3],
+            'MACHINE_START_DATE': row[4],
+            'MACHINE_NAME': row[5]        
         }
         capturedDatas.append(capturedData)
     cursor.close()
@@ -440,7 +436,7 @@ def card_details_eol1():
                     ON 
                         fit.port = mdt.class
                 WHERE
-                    fit.area = 'Eol1' OR fit.area = 'eol1'
+                    fit.area = 'Eol1' OR fit.area = 'EOL1'
     """)
     card_data = cursor.fetchall()
     cursor.close()
@@ -561,7 +557,7 @@ def card_details_die_prep():
                     ON 
                         fit.port = mdt.class
                 WHERE
-                    fit.area = 'Die Prep' OR fit.area = 'die drep'
+                    fit.area = 'Die Prep' OR fit.area = 'Die Prep'
     """)
     card_data = cursor.fetchall()
     cursor.close()
@@ -600,7 +596,7 @@ def card_details_die_attached():
                     ON 
                         fit.port = mdt.class
                 WHERE
-                    fit.area = 'Eol1' OR fit.area = 'eol1'
+                    fit.area = 'Eol1' OR fit.area = 'Die Attach'
     """)
     card_data = cursor.fetchall()
     cursor.close()
@@ -638,7 +634,6 @@ def update_ip_data():
     sid = request.json['sid']
     cur.execute(f"UPDATE public.fetched_ip_tbl SET status='{status}', stop_date='{stop_date}' WHERE sid='{sid}'")
     conn.commit()
-    print("Data updated successfully in the database")
     return jsonify("Data updated successfully in the database")
 
 
@@ -665,7 +660,6 @@ def insert_ip_data():
             cur.execute("UPDATE public.fetched_ip_tbl SET status = %s, start_date = %s, sid = %s WHERE port = %s",
                         (status, fetchedGetDate, fetched_sid, remove_py))
             conn.commit()  # commit the transaction
-            print("Data updated successfully in the database")
             return jsonify("Data updated successfully in the database")
         else:
             # data doesn't exist, insert
@@ -673,18 +667,15 @@ def insert_ip_data():
                 "INSERT INTO public.fetched_ip_tbl (fetched_ip, status, sid, port, start_date) VALUES (%s, %s, %s, %s, %s)",
                 (fetched_ip, status, fetched_sid, remove_py, fetchedGetDate))
             conn.commit()  # commit the transaction
-            print("Data inserted successfully into the database")
             return jsonify("Data inserted successfully into the database")
     except Exception as e:
         conn.rollback()  # rollback the transaction if an error occurs
-        print("An error occurred while inserting/updating data:", e)
         return jsonify("An error occurred while inserting/updating data")
 
 
 @app.route('/request_data', methods=['POST'])
 def request_data():
     data = request.get_json()
-    print(data)
     socketio.emit('dataPassed', {'data': data})
     return jsonify(data=data)
 
@@ -701,6 +692,92 @@ def getMachinesNamesApi():
         classes.add(rec['CLASS']) 
     unique_classes = list(classes) 
     return jsonify(unique_classes)
+
+@app.route('/insertController', methods=['POST'])
+def insertController():
+    controllerInput = request.form['controllerInput']
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(
+                'INSERT INTO public.controllers_tbl (controller_name) VALUES (%s)',
+                (controllerInput,))
+            conn.commit()
+            return jsonify("Data inserted successfully into the database")
+    except psycopg2.Error as e:
+        error_message = "Error inserting data into the database: " + str(e)
+        conn.rollback()
+        return jsonify(error_message)
+    
+@app.route('/insertMachinesToController')
+def insertMachinesToController():
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, machine_name FROM public.fetched_ip_tbl ORDER BY id ASC ")
+    rows = cursor.fetchall()
+    machines = []
+    for row in rows:
+        machines.append({
+            'id': row[0],
+            'text': row[1]  # Change 'machine_name' to 'text' for Select2 compatibility
+        })
+    cursor.close()
+    return jsonify({'results': machines})  # Use 'results' instead of 'data' for Select2
+
+
+@app.route('/processSelectedData', methods=['POST'])
+def process_selected_data():
+    selected_data = request.form.get('selectedData')
+    view_data = json.loads(selected_data)
+    data_id = int(request.form.get('data_id').strip('"'))
+    
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            for item in view_data:
+                value1 = item['text']
+                value2 = item['id']
+                cur.execute("INSERT INTO public.controller_with_machine_tbl (machine_id, controller_id) VALUES (%s, %s)", (value2, data_id))
+                conn.commit()
+            return jsonify("Data inserted successfully into the database")
+    except psycopg2.Error as e:
+        error_message = "Error inserting data into the database: " + str(e)
+        conn.rollback()
+        return jsonify(error_message)
+    
+@app.route('/viewControllerResult', methods=['POST'])
+def viewControllerResult():
+    data_id = int(request.form.get('data_id').strip('"'))
+    print(f"==>> data_id: {data_id}")
+    
+    # cursor = conn.cursor()
+    # cursor.execute("SELECT id, machine_name FROM public.fetched_ip_tbl ORDER BY id ASC ")
+    # rows = cursor.fetchall()
+    # machines = []
+    # for row in rows:
+    #     machines.append({
+    #         'id': row[0],
+    #         'text': row[1]  # Change 'machine_name' to 'text' for Select2 compatibility
+    #     })
+    # cursor.close()
+    return jsonify('test')  # Use 'results' instead of 'data' for Select2
+
+
+
+@app.route('/controllersViewData')
+def controllersViewData():
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, controller_name, remarks FROM controllers_tbl")
+    rows = cursor.fetchall()
+    machines = []
+    for row in rows:
+        machines.append({
+            'id': row[0],
+            'remarks': row[2],
+            'controller_name': row[1]
+        })
+    cursor.close()
+    return jsonify({'data': machines}) 
+
+
 
 
 ## SOCKET IO CONNECTION ##
@@ -730,7 +807,6 @@ def receive_file(payload):
 def handle_custom_event(data):
     sid = data['sessionID']
     machine_name = data['machine_name_var']
-    print('received data:', sid)
     # Emitting a response back to the client
     socketio.emit('my_message', {'machine_name': machine_name}, to=sid)
 
@@ -739,8 +815,6 @@ def handle_custom_event(data):
 def handle_client_message(data):
     message = data['message']
     filename_var = data['filename_var']
-    print('Received message:', message)
-    print('Received filename_var:', filename_var)
     socketio.emit('server_sample_response', {
         'message': message, 'filename_var': filename_var})
 
@@ -748,12 +822,9 @@ def handle_client_message(data):
 @socketio.on('client_connected')
 def handle_client_connected(data):
     client_ip = request.remote_addr
-    print('Client connected:', request.sid, client_ip)
     get_start_date = datetime.now()
     jsonStartDate = str(get_start_date)
     machine_name = data['machine_name']
-    print(
-        f"Client with SID {request.sid} connected with machine name {machine_name}")
     # Send a response event back to the client
     socketio.emit('server_response', {
         'message': 'CONNECTED', 'sid': request.sid, 'client_ip': client_ip, 'machine_name': machine_name,
@@ -767,7 +838,6 @@ def handle_disconnect():
     get_stop_date = datetime.now()
     jsonStopDate = str(get_stop_date)
 
-    print('Client disconnected:', client_ip, client_sid, jsonStopDate)
     cur.execute(
         f"UPDATE public.fetched_ip_tbl SET status='DISCONNECTED', stop_date='{jsonStopDate}' WHERE sid='{client_sid}'")
     conn.commit()
@@ -778,41 +848,51 @@ def handle_disconnect():
 
 @socketio.on('data')
 def handle_data(data, stat_var, uID, result, get_start_date):
+    print(f"==>> data: {data}")
+
     client_ip = request.remote_addr
-    print(f'Received data from {client_ip}: {data}')
-    print(data)
-    EMP_NO = data['EMP_NO']
-    AREA_NAME = data['AREA_NAME']
-    CLASS = data['CLASS']
-    MACHINE_ID = data['MACHINE_ID']
-    MACHINE_NAME = data['MACHINE_NAME']
-    MO = data['MO']
-    RUNNING_QTY = data['RUNNING_QTY']
-    STATUS = data['STATUS']
-    SUB_OPT_NAME = data['SUB_OPT_NAME']
     
-    # hris = f'http://hris.teamglac.com/api/users/emp-num?empno={EMP_NO}'
-    # response = requests.get(hris).json()
+        
+    # Assuming there is only one nested dictionary inside `data`
+    inner_data = next(iter(data.values()))
     
-    # user_data = response.get("result", {})
-    # photo_url = user_data.get('photo_url')
-
+    for key, value in inner_data.items():
+        print(key, value)
+    
+    EMP_NO = inner_data['EMP_NO']
+    print(f"==>> EMP_NO: {EMP_NO}")
+    AREA_NAME = inner_data['AREA_NAME']
+    CLASS = inner_data['CLASS']
+    MACHINE_ID = inner_data['MACHINE_ID']
+    MACHINE_NAME = inner_data['MACHINE_NAME']
+    MO = inner_data['MO']
+    RUNNING_QTY = inner_data['RUNNING_QTY']
+    STATUS = inner_data['STATUS']
+    SUB_OPT_NAME = inner_data['SUB_OPT_NAME']
+    
+    hris = f'http://hris.teamglac.com/api/users/emp-num?empno={EMP_NO}'
+    
+    response = requests.get(hris)
+    data = json.loads(response.text)['result']
+    print(f"==>> data: {data}")
+    
+    if data == False:
+        photo = "../static/assets/images/faces/pngegg.png"
+        print(f"==>> photo: {photo}")
+    else: 
+        photo = f"http://hris.teamglac.com/{photo_url}"
+        
     start_date = str(get_start_date)
-
-    # photo = "../static/assets/images/faces/pngegg.png" if photo_url is None else f"http://hris.teamglac.com/{photo_url}"
-    # print(photo)
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(
-                'INSERT INTO machine_fetched_data_tbl (area_name, class, emp_no, machine_id, machine_name, mo, running_qty, status, sub_opt_name, start_date, uid, machine_status) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                (AREA_NAME, CLASS, EMP_NO, MACHINE_ID, MACHINE_NAME, MO, RUNNING_QTY, STATUS, SUB_OPT_NAME, start_date, uID, stat_var))
+                'INSERT INTO machine_fetched_data_tbl (area_name, class, emp_no, machine_id, machine_name, mo, running_qty, status, sub_opt_name, photo, start_date, uid, machine_status) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                (AREA_NAME, CLASS, EMP_NO, MACHINE_ID, MACHINE_NAME, MO, RUNNING_QTY, STATUS, SUB_OPT_NAME, photo, start_date, uID, stat_var))
             conn.commit()
-            print("Data inserted successfully into the database")
             return jsonify("Data inserted successfully into the database")
     except psycopg2.Error as e:
         error_message = "Error inserting data into the database: " + str(e)
-        print(error_message)
         conn.rollback()
         return jsonify(error_message)
 
@@ -821,10 +901,8 @@ def handle_data(data, stat_var, uID, result, get_start_date):
 @socketio.on('stop_data')
 def handle_data(stat_var, uID, get_stop_date):
     client_ip = request.remote_addr
-    print(f'Received data from {client_ip}')
     socketio.emit('response', f'Server received data from {client_ip}: ')
     stop_date = str(get_stop_date)
-    print(stop_date)
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
@@ -833,10 +911,8 @@ def handle_data(stat_var, uID, get_stop_date):
                 (stop_date, stat_var, uID)
             )
             conn.commit()
-            print("Data inserted successfully into the database")
             return jsonify("Data inserted successfully into the database")
     except Exception as e:
-        print("Error inserting data into the database:", e)
         conn.rollback()
         return jsonify("Error inserting data into the database: " + str(e))
 
@@ -862,42 +938,38 @@ def index():
 @app.route('/data_table')
 @login_required
 def view_tables():
-    return render_template('controller-status.html')
+    return render_template('controllers.html')
 
 
 @app.route('/controller_program')
 @login_required
 def view_programs():
-    print('Go to controller program')
     return render_template('controllers-program.html')
 
 
 @app.route('/all_device')
 @login_required
 def all_device():
-    print('Go to All Devices')
     return render_template('controllers-area-view.html')
 
 
 @app.route('/configuration')
 @login_required
 def configuration():
-    print('Go to Config')
     return render_template('configuration-setup.html')
 
 
 @app.route('/machine_uph')
 @login_required
 def machine_uph():
-    print('Go to machine uph')
     return render_template('machine_uph.html')
 
 
 @app.route('/captured_data')
 @login_required
 def captured_data():
-    print('Go to Capture Data')
     return render_template('captured_time.html')
+
 
 
 @app.route('/logout')
