@@ -711,13 +711,35 @@ def insertController():
 @app.route('/insertMachinesToController')
 def insertMachinesToController():
     cursor = conn.cursor()
-    cursor.execute("SELECT id, machine_name FROM public.fetched_ip_tbl ORDER BY id ASC ")
+    cursor.execute("""
+                   SELECT
+                    id,
+                    fetched_ip,
+                    status,
+                    sid,
+                    port,
+                    machine_name,
+                    area,
+                    start_date,
+                    stop_date
+                   FROM public.fetched_ip_tbl ORDER BY id ASC 
+                   """)
     rows = cursor.fetchall()
     machines = []
     for row in rows:
+        start_date = row[7].strftime('%H:%M:%S') if row[7] is not None else None
+        stop_date = row[8].strftime('%H:%M:%S') if row[8] is not None else None
+
         machines.append({
             'id': row[0],
-            'text': row[1]  # Change 'machine_name' to 'text' for Select2 compatibility
+            'fetched_ip': row[1], # Change 'machine_name' to 'text' for Select2 compatibility
+            'status': row[2],
+            'sid': row[3],
+            'port': row[4],
+            'machine_name': row[5],
+            'area': row[6],
+            'start_date': start_date,
+            'stop_date': stop_date
         })
     cursor.close()
     return jsonify({'results': machines})  # Use 'results' instead of 'data' for Select2
@@ -725,16 +747,21 @@ def insertMachinesToController():
 
 @app.route('/processSelectedData', methods=['POST'])
 def process_selected_data():
-    selected_data = request.form.get('selectedData')
+    selected_data = request.form.get('selectedDataArray')
     view_data = json.loads(selected_data)
-    data_id = int(request.form.get('data_id').strip('"'))
+    print(f"==>> view_data: {view_data}")
+    dataControllerID = int(request.form.get('dataControllerID').strip('"'))
+    print(f"==>> dataControllerID: {dataControllerID}")
+    # return jsonify('test')
     
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             for item in view_data:
-                value1 = item['text']
+                value1 = item['port']
+                print(f"==>> value1: {value1}")
                 value2 = item['id']
-                cur.execute("INSERT INTO public.controller_with_machine_tbl (machine_id, controller_id) VALUES (%s, %s)", (value2, data_id))
+                print(f"==>> value2: {value2}")
+                cur.execute("INSERT INTO public.controller_with_machine_tbl (machine_id, controller_id) VALUES (%s, %s)", (value2, dataControllerID))
                 conn.commit()
             return jsonify("Data inserted successfully into the database")
     except psycopg2.Error as e:
@@ -745,19 +772,65 @@ def process_selected_data():
 @app.route('/viewControllerResult', methods=['POST'])
 def viewControllerResult():
     data_id = int(request.form.get('data_id').strip('"'))
-    print(f"==>> data_id: {data_id}")
-    
-    # cursor = conn.cursor()
-    # cursor.execute("SELECT id, machine_name FROM public.fetched_ip_tbl ORDER BY id ASC ")
-    # rows = cursor.fetchall()
-    # machines = []
-    # for row in rows:
-    #     machines.append({
-    #         'id': row[0],
-    #         'text': row[1]  # Change 'machine_name' to 'text' for Select2 compatibility
-    #     })
-    # cursor.close()
-    return jsonify('test')  # Use 'results' instead of 'data' for Select2
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT
+            a.id as ID,
+            a.fetched_ip as FETCHED_IP,
+            a.status as STATUS,
+            a.sid as SID,
+            a.port as PORT,
+            a.machine_name as MACHINE_NAME,
+            a.area as AREA,
+            a.start_date as START_DATE,
+            a.stop_date as STOP_DATE,
+            b.remarks as REMARKS
+        FROM (
+            SELECT 
+                a.id,
+                a.status,
+                a.start_date,
+                a.stop_date,
+                a.sid,
+                a.fetched_ip,
+                a.area,
+                a.port,
+                a.machine_name,
+                b.controller_id
+            FROM 
+                public.fetched_ip_tbl a 
+            LEFT JOIN 
+                public.controller_with_machine_tbl b
+            ON
+                a.id = b.machine_id
+        ) a
+        LEFT JOIN 
+            public.controllers_tbl b
+        ON 
+            b.id = a.controller_id
+        WHERE 
+            a.controller_id = %s
+    """, (data_id,))
+    rows = cursor.fetchall()
+    result = []
+    for row in rows:
+        start_date = row[7].strftime('%H:%M:%S') if row[7] is not None else None
+        stop_date = row[8].strftime('%H:%M:%S') if row[8] is not None else None
+        
+        result.append({
+            'ID': row[0],
+            'FETCHED_IP': row[1],
+            'STATUS': row[2],
+            'SID': row[3],
+            'PORT': row[4],
+            'MACHINE_NAME': row[5],
+            'AREA': row[6],
+            'START_DATE': start_date,
+            'STOP_DATE': stop_date,
+            'REMARKS': row[9]
+        })
+    cursor.close()
+    return jsonify({'data': result})
 
 
 

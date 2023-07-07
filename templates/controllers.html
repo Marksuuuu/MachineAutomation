@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/sweetalert2/sweetalert2.min.css') }}">
     <link rel="stylesheet" href="{{url_for('static', filename='assets/extensions/@icon/dripicons/dripicons.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 </head>
 
 <body>
@@ -131,7 +131,7 @@
                             <!--     <li class="submenu-item">
                                      <a href="{{ url_for('view_programs') }}" class="submenu-link">All Programs Status</a>
                                  </li>
-     
+
                                  <li class="submenu-item">
                                      <a href="{{ url_for('machine_uph') }}" class="submenu-link">Machine Uph</a>
                                  </li>
@@ -177,46 +177,68 @@
             </div>
         </div>
 
-        <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33" style="display: none;" aria-hidden="true">
+        <div class="modal fade text-left" id="inlineForm" tabindex="-1" aria-labelledby="myModalLabel33"
+             style="display: none;" aria-hidden="true">
             <div class="modal-dialog modal-dialog-top modal-dialog-scrollable modal-xl" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                    <span id='dataController' style="display: none;"></span>
-                  <h4 class="modal-title" id="myModalLabel33">
-                    Controllers
-                  </h4>
-                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  </button>
-                </div>
-                <form action="#">
-                  <div class="modal-body">
-                    <label for="email">Machines: </label>
-                    <div class="form-group">
-                        <select id="machine-select" class="form-controll" multiple="multiple"></select>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span id='dataController' style="display: none;"></span>
+                        <h4 class="modal-title" id="myModalLabel33">
+                            Controllers
+                        </h4>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round" class="feather feather-x">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
-                   <!-- <label for="password">Remarks: </label>
-                    <div class="form-group">
-                        <div class="form-group with-title mb-3">
-                        <textarea class="form-control" id="inputData" rows="3"></textarea>
-                        <label>Your Remarks</label>
+                        <div class="modal-body">
+                            <label for="email">Ports : </label>
+                            <div class="form-group">
+                                <select id="machine-select" class="form-controll" multiple="multiple"></select>
+                            </div>
+                            <table class="table table-responsive table-hover" id='resTable'
+                                   style="width:100%; overflow-y:scroll">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>FETCHED_IP</th>
+                                    <th>STATUS</th>
+                                    <th>SESSION ID</th>
+                                    <th>PORT</th>
+                                    <th>MACHINE NAME</th>
+                                    <th>AREA NAME</th>
+                                    <th>START_DATE</th>
+                                    <th>STOP_DATE</th>
+                                    <th>REMARKS</th>
+                                </tr>
+
+                                </thead>
+                                <tbody id="resTbody">
+                                <!--<tr id="placeholderRow">
+                                  <td colspan="9">Loading data...</td>
+                                </tr>-->
+
+                                </tbody>
+                            </table>
                         </div>
-                    </div>-->
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
-                      <i class="bx bx-x d-block d-sm-none"></i>
-                      <span class="d-none d-sm-block">Close</span>
-                    </button>
-                    <button type="button" class="btn btn-primary ms-1" id='submitClick'>
-                      <i class="bx bx-check d-block d-sm-none"></i>
-                      <span class="d-none d-sm-block">Submit</span>
-                    </button>
-                  </div>
-                </form>
-              </div>
+                        <!--<div class="modal-footer">
+                          <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
+                            <i class="bx bx-x d-block d-sm-none"></i>
+                            <span class="d-none d-sm-block">Close</span>
+                          </button>
+                          <button type="button" class="btn btn-primary ms-1" id='submitClick'>
+                            <i class="bx bx-check d-block d-sm-none"></i>
+                            <span class="d-none d-sm-block">Submit</span>
+                          </button>
+                        </div>-->
+
+                </div>
             </div>
-          </div>
+        </div>
 
         <section class="section" id='container'>
             <div class="card">
@@ -224,26 +246,28 @@
                     <div class="form-group">
                         <div class="col-md-2 mb-1">
                             <div class="input-group mb-3">
-                                <input type="text" id='controllerInput' class="form-control" placeholder="Controller Name" aria-describedby="controllerBtn">
-                                <button class="icon dripicons btn dripicons-plus btn btn-outline-primary" type="button" id="controllerBtn">
+                                <input type="text" id='controllerInput' class="form-control"
+                                       placeholder="Controller Name" aria-describedby="controllerBtn">
+                                <button class="icon dripicons btn dripicons-plus btn btn-outline-primary" type="button"
+                                        id="controllerBtn">
                                 </button>
                             </div>
-                          </div>
+                        </div>
                     </div>
-                <div class="card-body">
-                    <table class="table table-responsive table-hover" id="machine-table" style="width:100%">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Remarks</th>
-                            <th>Controller Name</th>
-                            <th>Action</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="card-body">
+                        <table class="table table-responsive table-hover" id="machine-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Remarks</th>
+                                <th>Controller Name</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
         </section>
         <!-- Basic Tables end -->
