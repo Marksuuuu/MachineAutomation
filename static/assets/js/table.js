@@ -70,6 +70,7 @@ $(document).ready(function () {
   $('#machine-table').on('click', '.show-btn', function () {
     $('#myModal').modal('show')
     var id = $(this).attr('data-id');
+    console.log("🚀 ~ file: table.js:73 ~ id:", id)
     ajaxRequestShow(id)
   });
 
@@ -139,10 +140,15 @@ $(document).ready(function () {
         {
           data: 'status',
           render: function (data) {
-            if (data == 'DISCONNECTED') {
-              return '<span class="badge bg-danger">' + data + '</span>';
-            } else if (data = 'CONNECTED') {
+            console.log("🚀 ~ file: table.js:142 ~ ajaxRequestShow ~ data:", data)
+            if (data == 'IDLE') {
+              return '<span class="badge bg-primary">' + data + '</span>';
+            } else if (data == 'CONNECTED') {
               return '<span class="badge bg-success">' + data + '</span>';
+            } else if (data == 'DISCONNECTED') {
+              return '<span class="badge bg-danger">' + data + '</span>';
+            } else if (data == 'PAUSE') {
+              return '<span class="badge bg-warining">' + data + '</span>';
             } else {
               return '<span class="badge bg-primary">' + data + '</span>';
             }
@@ -162,7 +168,8 @@ $(document).ready(function () {
             var buttonType = row.status === 'DISCONNECTED' ? 'button' : 'button';
             var buttonAttributes = row.status === 'DISCONNECTED' ? 'disabled' : '';
 
-            return '<button type="' + buttonType + '" class="btn ' + buttonClass + ' icon icon dripicons ' + buttonIcon + ' edit-btn" data-id="' + row.id + '"' + buttonAttributes + '></button>';
+            return '<button type="' + buttonType + '" class="btn ' + buttonClass + ' icon icon dripicons ' + buttonIcon + ' edit-btn" data-id="' + row.id + '"' + buttonAttributes + '></button>'+
+            '<button type="button" class="btn btn-outline-success icon icon dripicons dripicons-checklist show-history" data-id="' + row.port + '"></button>';
           },
           createdRow: function (row, data) {
             if (data.status === 'DISCONNECTED') {
@@ -256,6 +263,18 @@ $(document).ready(function () {
 
     ajaxRequestUpdate('/insert_machine_name', formData)
   });
+
+  $('#machineResultTbl').on('click', '.show-history', function () {
+    var name = $(this).attr('data-id');
+    console.log("🚀 ~ file: table.js:268 ~ name:", name)
+
+    data = JSON.stringify({
+      name: name
+    })
+
+    ajaxSendResponse('/showHistory', data)
+
+  })
 
   // $('#controllerBtn').click(function () {
   //   controllerSave();
@@ -374,6 +393,54 @@ socket.on('response', function (data) {
 });
 
 }
+
+function ajaxSendResponse(url, data){
+  console.log("🚀 ~ file: table.js:397 ~ ajaxSendResponse ~ data:", data)
+  $.ajax({
+    url: url,
+    data: data,
+    method: 'POST',
+    dataType: "json",
+    contentType: 'application/json; charset=utf-8',
+    beforeSend: function(){
+      $('#historyTable').DataTable().destroy()
+      $('#tbodyResult').html('')
+
+    }, 
+    success: function(response){
+      successResponse(response)
+    }
+
+  }).done(function(){
+
+  })
+}
+
+function successResponse(response){
+  var dataResult = response
+  console.log("🚀 ~ file: controllers.js:152 ~ ajaxRequest ~ dataResult:", dataResult)
+  dataResult.forEach(function(row) {
+    var newRow = '<tr>' +
+      '<td>' + row.ID + '</td>' +
+      '<td>' + row.PORT + '</td>' +
+      '<td>' + row.STATUS + '</td>' +
+      '<td>' + row.STATUS_DATE_CHANGED + '</td>' +
+      '</tr>';
+    $('#tbodyResult').append(newRow);
+  });
+     $('#historyTable').DataTable({
+      processing: true,
+      lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+    });
+    $('#myModal').modal('hide')
+    $('#historyModal').modal('show')
+}
+
+$('#modalShow').click(function (){
+  $('#myModal').modal('show')
+  $('#historyModal').modal('hide')
+
+})
 
 
   

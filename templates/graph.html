@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Bandwidth Monitor</title>
+    <script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io.connect();
+        var bandwidthChart = null;
+
+        socket.on('connect', function() {
+            socket.emit('get_bandwidth');
+        });
+
+        socket.on('bandwidth', function(data) {
+            if (!bandwidthChart) {
+                // Initialize the chart if it doesn't exist
+                var ctx = document.getElementById('bandwidth-chart').getContext('2d');
+                bandwidthChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Network Bandwidth',
+                            data: data.data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+            } else {
+                // Update the chart with new data
+                bandwidthChart.data.datasets[0].data = data.data;
+                bandwidthChart.update();
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Network Bandwidth Monitor</h1>
+    <canvas id="bandwidth-chart" width="400" height="200"></canvas>
+</body>
+</html>

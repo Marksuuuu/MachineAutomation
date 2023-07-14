@@ -13,11 +13,11 @@ $(document).ready(function () {
                     var mo = item.MO || '--';
                     var opr_id_no = item.EMP_NO || '--';
                     var qtyToProccessStatus = item.RUNNING_QTY || '--';
-                    var effciencyStatus  = '';
-                    var startTimeStatus  = item.MACHINE_START_DATE || '--';
-                    var totalRunningTime  = '';
-                    var idleTime  = '';
-                    var ooeStatus  = '';
+                    var effciencyStatus = '';
+                    var startTimeStatus = item.MACHINE_START_DATE || '--';
+                    var totalRunningTime = '';
+                    var idleTime = item.IDLE_TIME || '--';
+                    var ooeStatus = '';
                     var totalRunningTime = '--';
                     var fit_start_date = item.START_TIME || '--';
 
@@ -31,15 +31,20 @@ $(document).ready(function () {
                             status = 'ACTIVE MO RUNNING';
                             stat = 'active-running';
                         }
-                    } else {
+                    } else if (main_status === 'DISCONNECTED') {
                         main_status = 'DISCONNECTED';
                         status = 'DISCONNECTED';
                         stat = 'disconnected';
+                    } else {
+                        main_status = 'IDLE';
+                        status = 'IDLE';
+                        stat = 'idle';
+
                     }
 
                     var body = '<div class="carbon-example ' + stat + '">'
                         + '<span>Status: ' + status + ' </span><br>'
-                        + '<span id="machine">Machine Name: ' + machine_name  + '</span><br>'
+                        + '<span id="machine">Machine Name: ' + machine_name + '</span><br>'
                         + '<hr>'
                         + '<div class="oee-div">'
                         + '<span>EFFECTIVENESS: ' + effciencyStatus + '</span>'
@@ -65,7 +70,7 @@ $(document).ready(function () {
                         + '<dt style="font-weight:bold">Total Running Time:</dt>'
                         + '<dd>' + totalRunningTime + '</dd>'
                         + '<dt style="font-weight:bold">Idle time:</dt>'
-                        + '<dd>' + idleTime + '</dd>'
+                        + '<dd>' + (main_status === 'DISCONNECTED' ? "--" : main_status === 'CONNECTED' ? "--" : idleTime) + '</dd>'
                         + '</dl>'
                         + '</div>'
                         + '</div>'
@@ -75,7 +80,7 @@ $(document).ready(function () {
                         + '</div>'
                         + '<hr>'
                         + '<div class="oee-details">'
-                        + '<span style="font-weight:bold">Machine Start time : '+ fit_start_date +'</span>'
+                        + '<span style="font-weight:bold">Machine Start time : ' + fit_start_date + '</span>'
                         + '<br>'
                         + '<span style="font-weight:bold">Total Proccesed Quantity:</span>'
                         + '<br>'

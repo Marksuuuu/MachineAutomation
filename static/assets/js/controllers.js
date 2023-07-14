@@ -1,9 +1,9 @@
 var resTable = null;
 
-$(document).ready(function() {
+$(document).ready(function () {
   select2Options();
 
-  $('#controllerBtn').click(function() {
+  $('#controllerBtn').click(function () {
     var controllerInput = $('#controllerInput').val();
     var formData = new FormData();
     formData.append('controllerInput', controllerInput);
@@ -55,7 +55,7 @@ $(document).ready(function() {
     }
   });
 
-  $('#machine-table').on('click', '.add-machine', function(){
+  $('#machine-table').on('click', '.add-machine', function () {
     var data_id = $(this).attr('data-id');
     $('#dataController').attr('data-controller', data_id);
     $('#inlineForm').modal('show');
@@ -64,7 +64,7 @@ $(document).ready(function() {
     ajaxRequest('/viewControllerResult', formData);
   });
 
-  $('#machine-table').on('click', '.delete-btn', function(){
+  $('#machine-table').on('click', '.delete-btn', function () {
     var id = $(this).attr('data-id');
     console.log("Clicked on delete button with id:", id);
   });
@@ -73,10 +73,10 @@ $(document).ready(function() {
     $.ajax({
       url: '/insertMachinesToController',
       method: 'GET',
-      success: function(response) {
+      success: function (response) {
         if (response && response.results && Array.isArray(response.results)) {
           var machines = response.results;
-          var selectData = machines.map(function(machine) {
+          var selectData = machines.map(function (machine) {
             return {
               id: machine.id,
               text: machine.port,
@@ -90,18 +90,18 @@ $(document).ready(function() {
             width: '100%',
             tags: true
           });
-          selectElement.on('change', function() {
+          selectElement.on('change', function () {
             var selectedOptions = selectElement.select2('data');
             $('#resTbody').empty();
             selectedDataArray = [];
-            selectedOptions.forEach(function(option) {
+            selectedOptions.forEach(function (option) {
               var selectedData = option.data;
               appendToTable(selectedData);
               selectedDataArray.push(selectedData);
             });
             saveSelectedData();
             table.ajax.reload()
-             
+
           });
         }
       }
@@ -133,6 +133,30 @@ $(document).ready(function() {
     ajaxRequestControllerResult('/processSelectedData', formData);
   }
 
+  // function ajaxRequest(url, data) {
+  //   $('#resTable').DataTable({
+  //     ajax: {
+  //       url: url,
+  //       type: 'POST',
+  //       data: data
+  //     },
+  //     columns: [
+  //       { data: 'ID' },
+  //       { data: 'FETCHED_IP' },
+  //       { data: 'STATUS' },
+  //       { data: 'SID' },
+  //       { data: 'PORT' },
+  //       { data: 'MACHINE_NAME' },
+  //       { data: 'AREA' },
+  //       { data: 'START_DATE' },
+  //       { data: 'REMARKS' },
+  //     ],
+  //     processing: true,
+  //     serverSide: true,
+  //     lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+
+  //   });
+  // }
   function ajaxRequest(url, data) {
     $.ajax({
       url: url,
@@ -180,10 +204,25 @@ $(document).ready(function() {
       data: data,
       processData: false,
       contentType: false,
-      success: function(data) {
-        console.log("data:", data);
+      success: function (response) {
+        console.log("🚀 ~ file: controllers.js:208 ~ ajaxRequestControllerResult ~ response:", response.data)
+        if(response.data == 1){
+          Swal.fire({
+            title: 'Error',
+            text: 'Already Exists!',
+            icon: 'warning',
+          })
+        }else if(response.data == 0){
+          Swal.fire({
+            title: 'Error',
+            text: 'Insert Success!',
+            icon: 'success',
+          })
+        }else{
+          
+        }
       },
-    }).done(function() {
+    }).done(function () {
       // Code to execute after the AJAX request is done
     });
   }
